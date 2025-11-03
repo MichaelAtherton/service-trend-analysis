@@ -1,0 +1,1130 @@
+openapi: 3.1.0
+info:
+  title: AI Trend Analyzer API
+  description: |
+    Systematic trend detection for AI research using multi-pass analysis. This API performs 
+    deterministic trend detection on research paper corpus, identifying emerging techniques, 
+    maturing technologies, declining approaches, and research gaps.
+    
+    ## Key Features
+    - **Deterministic detection** using rule-based logic
+    - **Severity-weighted output** (CRITICAL/HIGH/MEDIUM/LOW)
+    - **Constitution-guided filtering** based on strategic priorities
+    - **Source-traceable results** with 3+ papers per trend
+    
+    ## Detection Methodology
+    The API runs four analysis passes:
+    1. **Emergence Detection**: Identifies techniques with ≥3x acceleration
+    2. **Maturation Detection**: Finds stable, production-ready techniques
+    3. **Decline Detection**: Spots fading techniques with <30% historical volume
+    4. **Gap Detection**: Discovers unexplored technique combinations
+    
+    ## Rate Limiting
+    - 100 requests per hour per API key
+    - 10 concurrent requests maximum
+    - Large corpus (>1000 papers) may take 30-60 seconds
+    
+    ## Authentication
+    All endpoints require API key authentication via `X-API-Key` header.
+  version: 1.0.0
+  contact:
+    name: AI Trend Analyzer Support
+    email: support@aitrendanalyzer.example.com
+    url: https://docs.aitrendanalyzer.example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://aitrendanalyzer.example.com/terms
+
+servers:
+  - url: https://api.aitrendanalyzer.example.com/v1
+    description: Production server
+  - url: https://staging-api.aitrendanalyzer.example.com/v1
+    description: Staging server
+  - url: http://localhost:8000/v1
+    description: Local development server
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Analysis
+    description: Trend detection and analysis operations
+  - name: Validation
+    description: Input validation and corpus health checks
+  - name: Health
+    description: Service health and status endpoints
+
+paths:
+  /analyze/trends:
+    post:
+      tags:
+        - Analysis
+      summary: Analyze research corpus for trends
+      description: |
+        Performs multi-pass trend detection on a corpus of research papers. Returns 
+        severity-weighted trends filtered by strategic constitution.
+        
+        **Analysis Time:**
+        - Small corpus (<100 papers): 2-5 seconds
+        - Medium corpus (100-500 papers): 5-15 seconds
+        - Large corpus (500-1000 papers): 15-30 seconds
+        - Very large corpus (>1000 papers): 30-60 seconds
+        
+        **Best Practices:**
+        - Provide at least 100 papers for meaningful trends
+        - Use 90-day rolling window for most accurate results
+        - Include production/deployment keywords for maturation detection
+        - Set appropriate constitution focus areas for relevance filtering
+      operationId: analyzeTrends
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+            examples:
+              basic_analysis:
+                summary: Basic analysis with default settings
+                value:
+                  corpus:
+                    - id: "paper_001"
+                      title: "Multi-Modal RAG with Vision APIs"
+                      date: "2025-10-15"
+                      techniques: ["RAG", "multi-modal", "vision"]
+                      authors: ["Smith, J.", "Doe, A."]
+                      citations: 89
+                      benchmarks:
+                        accuracy: 0.92
+                      use_cases: ["document search", "image understanding"]
+                    - id: "paper_002"
+                      title: "Production Function Calling at Scale"
+                      date: "2025-10-20"
+                      techniques: ["function-calling", "API", "production"]
+                      authors: ["Johnson, R."]
+                      citations: 145
+                      benchmarks:
+                        latency_ms: 45
+                      use_cases: ["agent systems", "tool integration"]
+                  constitution:
+                    strategic_focus:
+                      - "real-time AI systems"
+                      - "production-ready"
+                    priorities:
+                      latency: "<100ms"
+                      stability: ">7/10"
+                  window_days: 30
+              
+              executive_view:
+                summary: Executive-focused analysis (critical trends only)
+                value:
+                  corpus:
+                    - id: "paper_001"
+                      title: "Multi-Modal RAG with Vision APIs"
+                      date: "2025-10-15"
+                      techniques: ["RAG", "multi-modal", "vision"]
+                      authors: ["Smith, J."]
+                      citations: 89
+                  constitution:
+                    strategic_focus:
+                      - "competitive advantage"
+                      - "immediate ROI"
+                      - "production-ready"
+                    priorities:
+                      time_to_market: "fast"
+                    trend_thresholds:
+                      emergence:
+                        acceleration_rate: 5.0
+                  window_days: 30
+                  min_severity: "HIGH"
+              
+              researcher_view:
+                summary: Researcher deep-dive (all trends, custom thresholds)
+                value:
+                  corpus:
+                    - id: "paper_001"
+                      title: "Novel Architecture Experiments"
+                      date: "2025-10-15"
+                      techniques: ["transformers", "attention"]
+                      authors: ["Chen, L."]
+                      citations: 12
+                  constitution:
+                    strategic_focus:
+                      - "novel architectures"
+                      - "benchmark improvements"
+                      - "research gaps"
+                    trend_thresholds:
+                      emergence:
+                        days_since_first: 90
+                        min_recent_papers: 3
+                        acceleration_rate: 2.0
+                      maturation:
+                        relative_variance: 0.3
+                        min_production_papers: 1
+                  window_days: 90
+                  include_low_severity: true
+
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+              examples:
+                successful_analysis:
+                  summary: Successful trend detection
+                  value:
+                    analysis_id: "anl_7x9k2m4p"
+                    status: "completed"
+                    corpus_stats:
+                      total_papers: 156
+                      date_range:
+                        start: "2025-08-01"
+                        end: "2025-10-30"
+                      unique_techniques: 42
+                      avg_citations: 67.3
+                    trends:
+                      emerging:
+                        - id: "trend_001"
+                          technique: "multi-modal RAG"
+                          severity: "CRITICAL"
+                          type: "EMERGING"
+                          metrics:
+                            acceleration: 6.0
+                            recent_count: 12
+                            historical_count: 2
+                            first_mention_days_ago: 45
+                          recommendation: "Prototype within 2 weeks - rapid adoption signals production readiness"
+                          papers:
+                            - id: "paper_089"
+                              title: "Vision-Enhanced RAG Systems"
+                              relevance_score: 0.95
+                            - id: "paper_091"
+                              title: "Multi-Modal Document Understanding"
+                              relevance_score: 0.92
+                            - id: "paper_094"
+                              title: "Image-Text Retrieval at Scale"
+                              relevance_score: 0.89
+                          constitution_match:
+                            matched_focus_areas: ["real-time AI systems", "production-ready"]
+                            boost_applied: true
+                      maturing:
+                        - id: "trend_002"
+                          technique: "function-calling"
+                          severity: "HIGH"
+                          type: "MATURING"
+                          metrics:
+                            stability_percent: 94
+                            total_papers: 23
+                            production_signals: 8
+                            variance: 0.06
+                          recommendation: "Production rollout ready - stable volume with strong deployment signals"
+                          papers:
+                            - id: "paper_034"
+                              title: "Production Function Calling at Scale"
+                              relevance_score: 0.98
+                            - id: "paper_041"
+                              title: "Reliable Function Execution Patterns"
+                              relevance_score: 0.94
+                            - id: "paper_047"
+                              title: "Enterprise Function Integration"
+                              relevance_score: 0.91
+                          constitution_match:
+                            matched_focus_areas: ["production-ready"]
+                            boost_applied: true
+                      declining:
+                        - id: "trend_003"
+                          technique: "prompt-chaining"
+                          severity: "LOW"
+                          type: "DECLINING"
+                          metrics:
+                            decline_percent: 75
+                            recent_count: 2
+                            historical_count: 8
+                          recommendation: "Consider migration to agentic workflows - declining adoption"
+                          papers:
+                            - id: "paper_018"
+                              title: "Legacy Chain Optimization"
+                              relevance_score: 0.67
+                            - id: "paper_022"
+                              title: "Simple Chain Patterns"
+                              relevance_score: 0.61
+                          constitution_match:
+                            matched_focus_areas: []
+                            boost_applied: false
+                      gaps:
+                        - id: "trend_004"
+                          technique_a: "RAG"
+                          technique_b: "streaming"
+                          severity: "CRITICAL"
+                          type: "GAP"
+                          metrics:
+                            papers_a: 45
+                            papers_b: 23
+                            combined: 0
+                          recommendation: "Research opportunity - high-value unexplored combination"
+                          constitution_match:
+                            matched_focus_areas: ["real-time AI systems"]
+                            boost_applied: true
+                    summary:
+                      total_trends: 15
+                      by_severity:
+                        CRITICAL: 3
+                        HIGH: 5
+                        MEDIUM: 4
+                        LOW: 3
+                      top_recommendations:
+                        - "Prototype multi-modal RAG within 2 weeks"
+                        - "Investigate RAG + streaming combination (research gap)"
+                        - "Plan function-calling production rollout"
+                    metadata:
+                      processing_time_ms: 4782
+                      constitution_applied: true
+                      detection_passes_completed: 4
+                      timestamp: "2025-10-30T14:32:18Z"
+
+        '400':
+          description: Invalid request - validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_corpus:
+                  summary: Invalid corpus format
+                  value:
+                    error:
+                      code: "INVALID_CORPUS"
+                      message: "Corpus validation failed"
+                      details:
+                        - field: "corpus[0].date"
+                          issue: "Invalid date format. Expected YYYY-MM-DD"
+                          value: "10/15/2025"
+                        - field: "corpus[2].techniques"
+                          issue: "Must be array of strings"
+                          value: "RAG"
+                      timestamp: "2025-10-30T14:32:18Z"
+                      request_id: "req_abc123"
+                
+                insufficient_data:
+                  summary: Insufficient papers for analysis
+                  value:
+                    error:
+                      code: "INSUFFICIENT_DATA"
+                      message: "Corpus must contain at least 50 papers for meaningful trend detection"
+                      details:
+                        provided: 23
+                        required: 50
+                        suggestion: "Expand date range or add more data sources"
+                      timestamp: "2025-10-30T14:32:18Z"
+                      request_id: "req_xyz789"
+
+        '401':
+          description: Unauthorized - invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_api_key:
+                  summary: Missing API key
+                  value:
+                    error:
+                      code: "UNAUTHORIZED"
+                      message: "API key required. Provide X-API-Key header"
+                      timestamp: "2025-10-30T14:32:18Z"
+                      request_id: "req_unauth001"
+
+        '422':
+          description: Unprocessable entity - semantic validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_date_range:
+                  summary: Invalid date range in corpus
+                  value:
+                    error:
+                      code: "INVALID_DATE_RANGE"
+                      message: "Corpus papers must span at least 30 days for trend detection"
+                      details:
+                        actual_range_days: 12
+                        required_range_days: 30
+                      timestamp: "2025-10-30T14:32:18Z"
+                      request_id: "req_sem001"
+
+        '429':
+          description: Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Request limit per hour
+              example: 100
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current window
+              example: 0
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when rate limit resets
+              example: 1698678000
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until retry is allowed
+              example: 3600
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "RATE_LIMIT_EXCEEDED"
+                  message: "Rate limit exceeded. Maximum 100 requests per hour"
+                  details:
+                    limit: 100
+                    window: "1 hour"
+                    reset_at: "2025-10-30T15:00:00Z"
+                  timestamp: "2025-10-30T14:32:18Z"
+                  request_id: "req_rate001"
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "INTERNAL_ERROR"
+                  message: "An unexpected error occurred during analysis"
+                  timestamp: "2025-10-30T14:32:18Z"
+                  request_id: "req_err001"
+                  support_email: "support@aitrendanalyzer.example.com"
+
+        '503':
+          description: Service unavailable - analysis queue full
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until service may be available
+              example: 300
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "SERVICE_UNAVAILABLE"
+                  message: "Analysis queue is full. Please retry in a few minutes"
+                  details:
+                    queue_size: 150
+                    max_queue_size: 100
+                  timestamp: "2025-10-30T14:32:18Z"
+                  request_id: "req_unavail001"
+
+  /validate/corpus:
+    post:
+      tags:
+        - Validation
+      summary: Validate corpus format
+      description: |
+        Validates corpus format and provides health metrics without running full analysis.
+        Useful for pre-flight checks before expensive analysis operations.
+        
+        **Validation Checks:**
+        - Schema compliance (required fields, data types)
+        - Date format and range validation
+        - Technique coverage and diversity
+        - Citation distribution
+        - Recommended minimum thresholds
+      operationId: validateCorpus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - corpus
+              properties:
+                corpus:
+                  $ref: '#/components/schemas/Corpus'
+      responses:
+        '200':
+          description: Validation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    description: Whether corpus passes all validation checks
+                  health:
+                    type: object
+                    properties:
+                      total_papers:
+                        type: integer
+                      date_range_days:
+                        type: integer
+                      unique_techniques:
+                        type: integer
+                      avg_citations:
+                        type: number
+                        format: float
+                  warnings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                        message:
+                          type: string
+                        severity:
+                          type: string
+                          enum: [warning, recommendation]
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        issue:
+                          type: string
+              example:
+                valid: false
+                health:
+                  total_papers: 45
+                  date_range_days: 67
+                  unique_techniques: 18
+                  avg_citations: 34.2
+                warnings:
+                  - code: "LOW_PAPER_COUNT"
+                    message: "Corpus has only 45 papers. Recommend at least 100 for robust trends"
+                    severity: "warning"
+                  - code: "LIMITED_TECHNIQUE_DIVERSITY"
+                    message: "Only 18 unique techniques. Consider broader data sources"
+                    severity: "recommendation"
+                errors:
+                  - field: "corpus[12].date"
+                    issue: "Invalid date format. Expected YYYY-MM-DD"
+
+        '400':
+          description: Malformed request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Service health check
+      description: Returns service health status and version information
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  version:
+                    type: string
+                  uptime_seconds:
+                    type: integer
+                  queue_size:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+              example:
+                status: "healthy"
+                version: "1.0.0"
+                uptime_seconds: 86423
+                queue_size: 3
+                timestamp: "2025-10-30T14:32:18Z"
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication. Obtain from account dashboard.
+
+  schemas:
+    AnalysisRequest:
+      type: object
+      required:
+        - corpus
+      properties:
+        corpus:
+          $ref: '#/components/schemas/Corpus'
+        constitution:
+          $ref: '#/components/schemas/Constitution'
+        window_days:
+          type: integer
+          description: Analysis time window in days (recent papers to analyze)
+          default: 30
+          minimum: 7
+          maximum: 365
+          example: 30
+        min_severity:
+          type: string
+          description: Minimum severity level to include in results
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+          default: LOW
+          example: HIGH
+        include_low_severity:
+          type: boolean
+          description: Include LOW severity trends in results
+          default: true
+          example: false
+        max_trends_per_type:
+          type: integer
+          description: Maximum trends to return per type (emerging/maturing/declining/gaps)
+          default: 50
+          minimum: 1
+          maximum: 100
+          example: 20
+
+    Corpus:
+      type: array
+      description: Collection of research papers for analysis
+      minItems: 50
+      items:
+        $ref: '#/components/schemas/Paper'
+
+    Paper:
+      type: object
+      required:
+        - id
+        - title
+        - date
+        - techniques
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the paper
+          example: "paper_001"
+        title:
+          type: string
+          description: Paper title
+          minLength: 10
+          maxLength: 500
+          example: "Multi-Modal RAG with Vision APIs"
+        date:
+          type: string
+          format: date
+          description: Publication date (YYYY-MM-DD)
+          example: "2025-10-15"
+        techniques:
+          type: array
+          description: AI techniques mentioned in paper
+          minItems: 1
+          items:
+            type: string
+          example: ["RAG", "multi-modal", "vision"]
+        authors:
+          type: array
+          description: Paper authors
+          items:
+            type: string
+          example: ["Smith, J.", "Doe, A."]
+        citations:
+          type: integer
+          description: Number of citations
+          minimum: 0
+          example: 89
+        url:
+          type: string
+          format: uri
+          description: Link to full paper
+          example: "https://arxiv.org/abs/2025.12345"
+        benchmarks:
+          type: object
+          description: Performance metrics reported in paper
+          additionalProperties:
+            oneOf:
+              - type: number
+              - type: string
+          example:
+            accuracy: 0.92
+            latency_ms: 45
+        use_cases:
+          type: array
+          description: Application domains or use cases
+          items:
+            type: string
+          example: ["document search", "image understanding"]
+        abstract:
+          type: string
+          description: Paper abstract (optional, improves detection)
+          maxLength: 5000
+          example: "We present a novel approach to..."
+
+    Constitution:
+      type: object
+      description: Strategic priorities for filtering and severity boosting
+      properties:
+        strategic_focus:
+          type: array
+          description: Strategic focus areas (trends matching these get severity boost)
+          items:
+            type: string
+          example: ["real-time AI systems", "production-ready", "open-source"]
+        priorities:
+          type: object
+          description: Key performance priorities
+          additionalProperties:
+            type: string
+          example:
+            latency: "<100ms"
+            stability: ">7/10"
+            cost: "low"
+        trend_thresholds:
+          type: object
+          description: Custom detection thresholds (optional, overrides defaults)
+          properties:
+            emergence:
+              type: object
+              properties:
+                days_since_first:
+                  type: integer
+                  description: Maximum days since first mention to be "emerging"
+                  default: 60
+                  example: 90
+                min_recent_papers:
+                  type: integer
+                  description: Minimum recent papers required
+                  default: 5
+                  example: 3
+                acceleration_rate:
+                  type: number
+                  format: float
+                  description: Minimum acceleration rate (recent/historical)
+                  default: 3.0
+                  example: 2.0
+            maturation:
+              type: object
+              properties:
+                relative_variance:
+                  type: number
+                  format: float
+                  description: Maximum relative variance for stability
+                  default: 0.2
+                  example: 0.3
+                min_production_papers:
+                  type: integer
+                  description: Minimum papers with production signals
+                  default: 2
+                  example: 1
+
+    AnalysisResponse:
+      type: object
+      required:
+        - analysis_id
+        - status
+        - trends
+      properties:
+        analysis_id:
+          type: string
+          description: Unique identifier for this analysis
+          example: "anl_7x9k2m4p"
+        status:
+          type: string
+          enum: [completed, partial]
+          description: Analysis completion status
+          example: "completed"
+        corpus_stats:
+          type: object
+          properties:
+            total_papers:
+              type: integer
+            date_range:
+              type: object
+              properties:
+                start:
+                  type: string
+                  format: date
+                end:
+                  type: string
+                  format: date
+            unique_techniques:
+              type: integer
+            avg_citations:
+              type: number
+              format: float
+        trends:
+          type: object
+          properties:
+            emerging:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmergingTrend'
+            maturing:
+              type: array
+              items:
+                $ref: '#/components/schemas/MaturingTrend'
+            declining:
+              type: array
+              items:
+                $ref: '#/components/schemas/DecliningTrend'
+            gaps:
+              type: array
+              items:
+                $ref: '#/components/schemas/GapTrend'
+        summary:
+          type: object
+          properties:
+            total_trends:
+              type: integer
+            by_severity:
+              type: object
+              properties:
+                CRITICAL:
+                  type: integer
+                HIGH:
+                  type: integer
+                MEDIUM:
+                  type: integer
+                LOW:
+                  type: integer
+            top_recommendations:
+              type: array
+              items:
+                type: string
+        metadata:
+          type: object
+          properties:
+            processing_time_ms:
+              type: integer
+            constitution_applied:
+              type: boolean
+            detection_passes_completed:
+              type: integer
+            timestamp:
+              type: string
+              format: date-time
+
+    EmergingTrend:
+      type: object
+      required:
+        - id
+        - technique
+        - severity
+        - type
+        - metrics
+        - recommendation
+        - papers
+      properties:
+        id:
+          type: string
+          example: "trend_001"
+        technique:
+          type: string
+          example: "multi-modal RAG"
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+          example: "CRITICAL"
+        type:
+          type: string
+          enum: [EMERGING]
+          example: "EMERGING"
+        metrics:
+          type: object
+          required:
+            - acceleration
+            - recent_count
+            - historical_count
+            - first_mention_days_ago
+          properties:
+            acceleration:
+              type: number
+              format: float
+              description: Acceleration rate (recent/historical)
+              example: 6.0
+            recent_count:
+              type: integer
+              description: Papers in recent window
+              example: 12
+            historical_count:
+              type: integer
+              description: Papers in historical window
+              example: 2
+            first_mention_days_ago:
+              type: integer
+              description: Days since first mention
+              example: 45
+        recommendation:
+          type: string
+          example: "Prototype within 2 weeks - rapid adoption signals production readiness"
+        papers:
+          type: array
+          minItems: 3
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              relevance_score:
+                type: number
+                format: float
+                minimum: 0
+                maximum: 1
+        constitution_match:
+          type: object
+          properties:
+            matched_focus_areas:
+              type: array
+              items:
+                type: string
+            boost_applied:
+              type: boolean
+
+    MaturingTrend:
+      type: object
+      required:
+        - id
+        - technique
+        - severity
+        - type
+        - metrics
+        - recommendation
+        - papers
+      properties:
+        id:
+          type: string
+        technique:
+          type: string
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+        type:
+          type: string
+          enum: [MATURING]
+        metrics:
+          type: object
+          required:
+            - stability_percent
+            - total_papers
+            - production_signals
+            - variance
+          properties:
+            stability_percent:
+              type: integer
+              description: Stability percentage (100 - relative_variance * 100)
+              example: 94
+            total_papers:
+              type: integer
+              example: 23
+            production_signals:
+              type: integer
+              description: Papers with production/deployment keywords
+              example: 8
+            variance:
+              type: number
+              format: float
+              example: 0.06
+        recommendation:
+          type: string
+        papers:
+          type: array
+          minItems: 3
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              relevance_score:
+                type: number
+                format: float
+        constitution_match:
+          type: object
+          properties:
+            matched_focus_areas:
+              type: array
+              items:
+                type: string
+            boost_applied:
+              type: boolean
+
+    DecliningTrend:
+      type: object
+      required:
+        - id
+        - technique
+        - severity
+        - type
+        - metrics
+        - recommendation
+        - papers
+      properties:
+        id:
+          type: string
+        technique:
+          type: string
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+        type:
+          type: string
+          enum: [DECLINING]
+        metrics:
+          type: object
+          required:
+            - decline_percent
+            - recent_count
+            - historical_count
+          properties:
+            decline_percent:
+              type: integer
+              description: Percentage decline from historical to recent
+              example: 75
+            recent_count:
+              type: integer
+              example: 2
+            historical_count:
+              type: integer
+              example: 8
+        recommendation:
+          type: string
+        papers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              relevance_score:
+                type: number
+                format: float
+        constitution_match:
+          type: object
+          properties:
+            matched_focus_areas:
+              type: array
+              items:
+                type: string
+            boost_applied:
+              type: boolean
+
+    GapTrend:
+      type: object
+      required:
+        - id
+        - technique_a
+        - technique_b
+        - severity
+        - type
+        - metrics
+        - recommendation
+      properties:
+        id:
+          type: string
+        technique_a:
+          type: string
+          example: "RAG"
+        technique_b:
+          type: string
+          example: "streaming"
+        severity:
+          type: string
+          enum: [CRITICAL, HIGH, MEDIUM, LOW]
+        type:
+          type: string
+          enum: [GAP]
+        metrics:
+          type: object
+          required:
+            - papers_a
+            - papers_b
+            - combined
+          properties:
+            papers_a:
+              type: integer
+              description: Papers mentioning technique A
+              example: 45
+            papers_b:
+              type: integer
+              description: Papers mentioning technique B
+              example: 23
+            combined:
+              type: integer
+              description: Papers mentioning both (should be 0 for gaps)
+              example: 0
+        recommendation:
+          type: string
+          example: "Research opportunity - high-value unexplored combination"
+        constitution_match:
+          type: object
+          properties:
+            matched_focus_areas:
+              type: array
+              items:
+                type: string
+            boost_applied:
+              type: boolean
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - timestamp
+            - request_id
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+              example: "INVALID_CORPUS"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Corpus validation failed"
+            details:
+              oneOf:
+                - type: object
+                - type: array
+                - type: string
+              description: Additional error context
+            timestamp:
+              type: string
+              format: date-time
+              example: "2025-10-30T14:32:18Z"
+            request_id:
+              type: string
+              description: Unique request identifier for support
+              example: "req_abc123"
+            support_email:
+              type: string
+              format: email
+              description: Contact for support (included in 500 errors)
