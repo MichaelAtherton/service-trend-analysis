@@ -1,0 +1,344 @@
+{
+  "RAG": {
+    "full_name": "Retrieval-Augmented Generation",
+    "aliases": ["retrieval augmented", "rag system", "retrieval-augmented generation"],
+    "category": "Architecture Patterns",
+    "confidence_boost": 0.0
+  },
+  "RLHF": {
+    "full_name": "Reinforcement Learning from Human Feedback",
+    "aliases": ["rlhf", "reinforcement learning with human feedback"],
+    "category": "Training Methods",
+    "confidence_boost": 0.05
+  },
+  "fine-tuning": {
+    "full_name": "Fine-Tuning",
+    "aliases": ["finetuning", "fine tuning", "model fine-tuning"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "prompt-engineering": {
+    "full_name": "Prompt Engineering",
+    "aliases": ["prompt engineering", "prompt design", "prompting"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "few-shot-learning": {
+    "full_name": "Few-Shot Learning",
+    "aliases": ["few shot", "few-shot", "k-shot learning"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "zero-shot-learning": {
+    "full_name": "Zero-Shot Learning",
+    "aliases": ["zero shot", "zero-shot"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "multi-modal": {
+    "full_name": "Multi-Modal Learning",
+    "aliases": ["multimodal", "multi modal", "vision-language"],
+    "category": "Architecture Patterns",
+    "confidence_boost": 0.0
+  },
+  "attention-mechanism": {
+    "full_name": "Attention Mechanism",
+    "aliases": ["attention", "self-attention", "cross-attention"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "transformer": {
+    "full_name": "Transformer Architecture",
+    "aliases": ["transformers", "transformer model"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "function-calling": {
+    "full_name": "Function Calling",
+    "aliases": ["function calling", "tool use", "tool calling"],
+    "category": "Capabilities",
+    "confidence_boost": 0.0
+  },
+  "chain-of-thought": {
+    "full_name": "Chain-of-Thought Prompting",
+    "aliases": ["chain of thought", "cot", "reasoning chains"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "quantization": {
+    "full_name": "Model Quantization",
+    "aliases": ["quantization", "8-bit", "4-bit", "int8"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "distillation": {
+    "full_name": "Knowledge Distillation",
+    "aliases": ["distillation", "model distillation", "teacher-student"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "lora": {
+    "full_name": "Low-Rank Adaptation (LoRA)",
+    "aliases": ["lora", "low-rank adaptation", "parameter efficient"],
+    "category": "Training Methods",
+    "confidence_boost": 0.05
+  },
+  "in-context-learning": {
+    "full_name": "In-Context Learning",
+    "aliases": ["in context", "icl", "context learning"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "embeddings": {
+    "full_name": "Embeddings",
+    "aliases": ["embedding", "vector embeddings", "dense embeddings"],
+    "category": "Representation Learning",
+    "confidence_boost": 0.0
+  },
+  "semantic-search": {
+    "full_name": "Semantic Search",
+    "aliases": ["semantic search", "vector search", "similarity search"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "text-generation": {
+    "full_name": "Text Generation",
+    "aliases": ["text generation", "language generation", "llm generation"],
+    "category": "Capabilities",
+    "confidence_boost": 0.0
+  },
+  "summarization": {
+    "full_name": "Abstractive Summarization",
+    "aliases": ["summarization", "text summarization", "abstractive summary"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "sentiment-analysis": {
+    "full_name": "Sentiment Analysis",
+    "aliases": ["sentiment analysis", "sentiment classification", "emotion detection"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "named-entity-recognition": {
+    "full_name": "Named Entity Recognition",
+    "aliases": ["ner", "named entity", "entity recognition"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "question-answering": {
+    "full_name": "Question Answering",
+    "aliases": ["question answering", "qa", "q&a"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "language-translation": {
+    "full_name": "Neural Machine Translation",
+    "aliases": ["translation", "machine translation", "nmt"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "reinforcement-learning": {
+    "full_name": "Reinforcement Learning",
+    "aliases": ["reinforcement learning", "rl", "policy learning"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "transfer-learning": {
+    "full_name": "Transfer Learning",
+    "aliases": ["transfer learning", "pre-training", "domain adaptation"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "curriculum-learning": {
+    "full_name": "Curriculum Learning",
+    "aliases": ["curriculum learning", "incremental learning"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "active-learning": {
+    "full_name": "Active Learning",
+    "aliases": ["active learning", "human-in-the-loop"],
+    "category": "Training Methods",
+    "confidence_boost": 0.0
+  },
+  "data-augmentation": {
+    "full_name": "Data Augmentation",
+    "aliases": ["data augmentation", "synthetic data", "augmentation"],
+    "category": "Data Processing",
+    "confidence_boost": 0.0
+  },
+  "tokenization": {
+    "full_name": "Tokenization",
+    "aliases": ["tokenization", "bpe", "wordpiece", "sentencepiece"],
+    "category": "Data Processing",
+    "confidence_boost": 0.0
+  },
+  "beam-search": {
+    "full_name": "Beam Search",
+    "aliases": ["beam search", "beam decoding"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "temperature-sampling": {
+    "full_name": "Temperature Sampling",
+    "aliases": ["temperature", "sampling temperature", "stochastic decoding"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "top-k-sampling": {
+    "full_name": "Top-K Sampling",
+    "aliases": ["top k", "top-k", "k-sampling"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "nucleus-sampling": {
+    "full_name": "Nucleus Sampling (Top-P)",
+    "aliases": ["nucleus sampling", "top-p", "top p"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "mixture-of-experts": {
+    "full_name": "Mixture of Experts",
+    "aliases": ["moe", "mixture of experts", "sparse models"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "flash-attention": {
+    "full_name": "Flash Attention",
+    "aliases": ["flash attention", "efficient attention"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "kv-cache": {
+    "full_name": "Key-Value Caching",
+    "aliases": ["kv cache", "key-value cache", "attention cache"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "model-parallelism": {
+    "full_name": "Model Parallelism",
+    "aliases": ["model parallelism", "tensor parallelism", "pipeline parallelism"],
+    "category": "Training Infrastructure",
+    "confidence_boost": 0.0
+  },
+  "data-parallelism": {
+    "full_name": "Data Parallelism",
+    "aliases": ["data parallelism", "ddp", "distributed training"],
+    "category": "Training Infrastructure",
+    "confidence_boost": 0.0
+  },
+  "gradient-accumulation": {
+    "full_name": "Gradient Accumulation",
+    "aliases": ["gradient accumulation", "micro-batching"],
+    "category": "Training Infrastructure",
+    "confidence_boost": 0.0
+  },
+  "mixed-precision": {
+    "full_name": "Mixed Precision Training",
+    "aliases": ["mixed precision", "fp16", "bf16", "amp"],
+    "category": "Training Infrastructure",
+    "confidence_boost": 0.0
+  },
+  "gradient-checkpointing": {
+    "full_name": "Gradient Checkpointing",
+    "aliases": ["gradient checkpointing", "activation checkpointing"],
+    "category": "Training Infrastructure",
+    "confidence_boost": 0.0
+  },
+  "flash-attention-2": {
+    "full_name": "Flash Attention 2",
+    "aliases": ["flash attention 2", "flash-attention-2", "fa2"],
+    "category": "Inference Optimization",
+    "confidence_boost": 0.0
+  },
+  "rope": {
+    "full_name": "Rotary Position Embedding",
+    "aliases": ["rope", "rotary embeddings", "rotary position"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "alibi": {
+    "full_name": "Attention with Linear Biases (ALiBi)",
+    "aliases": ["alibi", "attention linear biases"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "gpt": {
+    "full_name": "Generative Pre-trained Transformer",
+    "aliases": ["gpt", "gpt model", "autoregressive transformer"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "bert": {
+    "full_name": "Bidirectional Encoder Representations from Transformers",
+    "aliases": ["bert", "bert model", "masked language model"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "t5": {
+    "full_name": "Text-to-Text Transfer Transformer",
+    "aliases": ["t5", "t5 model", "encoder-decoder"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "llama": {
+    "full_name": "LLaMA",
+    "aliases": ["llama", "llama model", "meta llama"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "gpt-4": {
+    "full_name": "GPT-4",
+    "aliases": ["gpt-4", "gpt4", "openai gpt-4"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "claude": {
+    "full_name": "Claude",
+    "aliases": ["claude", "anthropic claude", "claude model"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "gemini": {
+    "full_name": "Gemini",
+    "aliases": ["gemini", "google gemini"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "vit": {
+    "full_name": "Vision Transformer",
+    "aliases": ["vit", "vision transformer", "image transformer"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "clip": {
+    "full_name": "Contrastive Language-Image Pre-training",
+    "aliases": ["clip", "contrastive learning", "vision-language"],
+    "category": "Model Architecture",
+    "confidence_boost": 0.0
+  },
+  "dall-e": {
+    "full_name": "DALL-E",
+    "aliases": ["dall-e", "dalle", "text-to-image"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "stable-diffusion": {
+    "full_name": "Stable Diffusion",
+    "aliases": ["stable diffusion", "diffusion model", "latent diffusion"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "whisper": {
+    "full_name": "Whisper",
+    "aliases": ["whisper", "speech recognition", "asr"],
+    "category": "Applications",
+    "confidence_boost": 0.0
+  },
+  "langchain": {
+    "full_name": "LangChain",
+    "aliases": ["langchain", "llm framework", "agent framework"],
+    "category": "Frameworks",
+    "confidence_boost": 0.0
+  }
+}

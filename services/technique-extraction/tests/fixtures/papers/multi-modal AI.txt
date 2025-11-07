@@ -1,0 +1,1507 @@
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 1
+Multi-modal Generative AI:
+Multi-modal LLMs, Diffusions and the Unification
+Xin Wang, Member, IEEE, Yuwei Zhou, Bin Huang, Hong Chen, and Wenwu Zhu, Fellow, IEEE
+Abstract—Multi-modal generative AI (Artificial Intelligence) As such, there naturally arises a question: “Is it possible
+has attracted increasing attention from both academia and toestablishaunifiedmulti-modalgenerativemodelforsimul-
+industry. Particularly, two dominant families of techniques
+taneous understanding and generation?” And if the answer is
+have emerged: i) Multi-modal large language models (LLMs)
+yes,whatwouldsuchamodelbe,eithersimilartomulti-modal
+demonstrate impressive ability for multi-modal understanding;
+and ii) Diffusion models exhibit remarkable multi-modal pow- LLM or diffusion, or in a new form? To capture the relations
+ers in terms of multi-modal generation. Therefore, this paper amongdifferentmodalities,isitagoodideatoadoptanearly-
+provides a comprehensive overview of multi-modal generative fusion strategy (such as Chameleon [3]), or just straightfor-
+AI, including multi-modal LLMs, diffusions, and the unification
+wardly aligna pretrainedvisual modelwith a languagemodel
+for understanding and generation. To lay a solid foundation
+(such as LLAVA [4])? To further unify understanding and
+for unified models, we first provide a detailed review of both
+multi-modal LLMs and diffusion models respectively, including generation,isitsufficienttoemployMixtureofExperts(MoE)
+theirprobabilisticmodelingprocedure,multi-modalarchitecture strategies or only use a dense model?
+design, and advanced applications to image/video LLMs as well To answer these questions, we conduct deep and compre-
+as text-to-image/video generation. Furthermore, we explore the hensivediscussionsofmulti-modalgenerativeAIinthispaper,
+emerging efforts toward unified models for understanding and
+whoseoverallorganizationisillustratedinFig.1.Specifically,
+generation.Toachievetheunificationofunderstandingandgen-
+wefirstpresentasystematicreviewofexistingworksonmulti-
+eration,weinvestigatekeydesignsincludingautoregressive-based
+and diffusion-based modeling, as well as dense and Mixture-of- modalLLM(Sec.II)andmulti-modaldiffusion(Sec.III),cov-
+Experts(MoE)architectures.Wethenintroduceseveralstrategies ering mathematical preliminaries, model architectures, fusion
+for unified models, analyzing their potential advantages and strategies, recent advances, and applications. Then we present
+disadvantages. In addition, we summarize the common datasets
+ourinsightsonunifiedmodelsforsimultaneousunderstanding
+widely used for multi-modal generative AI pretraining. Last
+and generation in Sec. IV. Besides, we further summarize
+but not least, we present several challenging future research
+directions which may contribute to the ongoing advancement video/visual-language datasets for multi-modal generative AI
+of multi-modal generative AI. pretraining in Sec. V. Last but not least, we provide future
+IndexTerms—Multi-modalGenerativeAI,Multi-modalLarge directions that deserve further investigation for multi-modal
+Language Model, Diffusion Model, Unified Understanding and generative AI.
+Generation We would like to point out that although several insightful
+surveys have been conducted on multi-modal understand-
+ing [5]–[7], visual generation [8]–[10], and both [11], [12],
+I. INTRODUCTION
+this work differs from them in comprehensive discussions on
+Multi-modal generative AI (Artificial Intelligence) has re-
+models for the unification of understanding and generation in
+ceived increasing attention recently with the advent of (multi-
+addition to reviewing them separately, thus aiming to bridge
+modal) large language models (LLMs) and diffusion models.
+the gap between understanding and generation in a unified
+Two typical models of multi-modal generative AI are GPT-
+architecture.Wehighlightrecentadvances,categorizeexisting
+4V[1]andSora[2]fromOpenAI,whichhaveproducedgreat
+approaches, introduce related datasets, and share insights for
+impacts on both academia and industry. To compare GPT-4V
+future directions. In summary, we make the following contri-
+andSoraintermsoffunctionality,GPT-4Vtargetsmulti-modal
+butions.
+understanding and Sora aims at visual generation — GPT-4V
+• We comprehensively overview multi-modal generative
+enables the LLM to understand visual input via generating
+AI, covering multi-modal LLMs for multi-modal under-
+relevant texts, while Sora serves as a text-to-video generation
+standing and diffusion models for visual generation.
+model which outputs visual signals given textual input. To
+• We propose a structured taxonomy of unified models for
+make comparisons in terms of probabilistic modeling, GPT-
+multi-modal understanding and generation, and provide
+4V is a multi-modal LLM with autoregressive probabilistic
+thorough discussions on them.
+modeling,whileSoraisamulti-modalvideogenerationmodel
+• We share our insights on promising future directions to
+with diffusion denoising modeling.
+highlight the trending research for advances in multi-
+modal generative AI.
+Wenwu Zhu is the corresponding authors. Xin Wang, Yuwei Zhou,
+Bin Huang, Hong Chen, and Wenwu Zhu are with the Department
+of Computer Science, Beijing Information Science and Technology Na- II. MULTI-MODALLLMFORUNDERSTANDING
+tional Research Center, Tsinghua University, Beijing 100084, China. (E-
+Multi-modal LLMs have recently become dominant in the
+mail: {xin wang, wwzhu}@tsinghua.edu.cn), {zhou-yw21, huangb23, h-
+chen20}@mails.tsinghua.edu.cn. field of visual understanding. In this section, we will review
+5202
+luJ
+01
+]IA.sc[
+2v39941.9042:viXra
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 2
+IA
+evitareneG
+ladom-itluM
+）egaugnaL-oediV/egamI（
+1. Related Techniques: LLM, Vision-language Pretraining, Visual Tokenizer
+Large-scale Multi-modal Datasets
+Alignment Architectures (Sec. V)
+2. MLLM Architectures
+Multi-modal LLMs
+Early-fusion Architectures
+(Sec. II) MSCOCO, CC-3M, LAION,
+Multi-modal 3. Image LLMs LLAVA, Qwen-VL, VisionLLM, Chameleon, Gemini, etc. WebVid, InternVid, etc.
+Understanding
+Caption
+4. Video LLMs VideoLLaMA, VideoChat,VideoLLaVA, VtimeLLM, etc.
+VQAv2, AOK-VQA, OCR-VQA,
+1. Related Techniques: VAE, GAN, DDPM, SDE, Latent Diffusion Model WebVidQA, TGIF, EgoQA, etc.
+Conversation
+Architectures: UNet/Transformer
+2. Model Design Diffusion Modality Interaction: AdaLN/Cross-
+(Sec. III) Attention/In-context condition CLEVR, VisualMRC, NExT-QA,
+CLEVRER, etc.
+Multi-modal
+3. Text-to-Image Glide, Imagen, DALLE, Stable Diffusion, etc.
+Generation
+Reasoning
+4. Text-to-Video AnimateDiff, VideoCrafter, Sora, Kling, etc.
+LLaVA-Instruct, Instruction data
+1.Probabilistic Modeling: Diffusion or Auto-Regressive of Video-LLaVA, VideoChat2,
+Unified Models VideoLLaMa2, etc.
+Multi-modal Input Processors: Single or Semantic-Pixel
+(Sec. IV)
+2.Model Architectures
+Integration
+Multi-Modal Transformers: Dense or MoE
+Fig.1. Theoverallorganizationofthispaper.
+the literature on the multi-modal LLMs. Codebook 𝑍
+…
+A. Preliminaries
+We first introduce some preliminaries involving the LLM,
+vision-language pretraining, and visual tokenizers. 𝐸 153 𝐷
+1) LLM Autoregressive Probabilistic Modeling: The core
+8
+component of multi-modal LLMs is the LLM, which receives 𝐸(𝑥)
+the multi-modal input including the user’s instructions, ques- 𝑥 Encoder Compressed Visual Decoder 𝑥ො
+image Tokens
+tions, and visual information, and then outputs the answers to
+Fig.2. Illustrationfortheframeworkofthevisualtokenizers.
+the user in a text-generation form. The LLM is basically an
+autoregressive model that tries to predict the next word based
+on all the previous words, as shown in Eq. (1).
+most influential VLP models is CLIP [16], which learns a
+n joint embedding space where semantically related images and
+(cid:89)
+p(w)= p (w |w ), (1) texts are mapped close to each other.
+θL i <i
+i=1 CLIP consists of two separate encoders: a visual encoder
+where θ denotes the parameters of the LLM, which is (typicallyaVisionTransformer[17]orResNet[18])andatext
+L
+generally composed of several layers of transformers [13]. encoder (usually a Transformer). Given a batch of image-text
+Note that LLM can only receive the text tokens as its input, pairs, CLIP is trained with a contrastive loss that encourages
+the next important problem for multi-modal LLM is how theembeddingsofmatchedimage-textpairstobeclose,while
+to enable LLM to understand the visual information. To pushing apart the embeddings of mismatched pairs.
+tackle the problem, most existing works [4], [14], [15] try to The pretrained CLIP model has been widely used in multi-
+align the LLM with the visual encoders from vision-language modal LLMs to inject visual understanding into the LLMs.
+pretrainingtasks,suchasCLIP[16].Morerecently,therehave Typically,visualfeaturesextractedbytheCLIPimageencoder
+been some attempts [3] to directly transform the images into are projected into the LLM’s input space through a learned
+discrete visual tokens so that the text and visual tokens can adapter or alignment module [4]. This allows the LLM to
+be tackled by the autoregressive LLM together. Next, we will reason over both linguistic and visual information in a unified
+introduce preliminaries about vision-language pretraining and manner.
+visual tokenizers. 3) Visual Tokenizer: Inspired by language models where
+2) Vision-Language Pretraining: Vision-language pretrain- each word is tokenized by a discrete tokenizer, a series of
+ing(VLP)aimstolearnalignedrepresentationsofimagesand works also transform images into discrete tokens. Typical
+texts by leveraging large-scale image-text pairs. One of the visual tokenizers include the VQ-VAEs [19], [20] and VQ-
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 3
+GANs[21],[22],whoseoverallframeworkisshowninFig.2.
+Multi-Modal Auto-Regressive
+We will begin our discussion with VQ-VAE. Basically, VQ- Large Language Model (LLM) Language Model
+VAE works like an auto-encoder, which has an encoder E(·)
+Alignment
+andadecoderD(·).Givenanimagex,VQ-VAEfirstencodes
+Module Visual Text
+it with an encoder E(·) into a lower-dimensional continuous Tokenizer Tokenizer
+Pretrained
+vector E(x). Then, the continuous vector is discretized using
+Vision Model
+a codebook Z = {z }K . The codebook functions similarly Input Image Text Instructions
+k k=1
+to a word embedding table in NLP, where K corresponds Input Image Text Instructions
+to the vocabulary size, and each z
+k
+∈ Rnc represents a
+Alignment Architecture Early-fusion Architecture
+visual prototype analogous to a word embedding. With the
+encodedvectorE(x)andthecodebookZ,weobtainadiscrete Fig. 3. Two branches of multi-modal LLM architectures, including (i) the
+representationz oftheimagebyfindingthenearestneighbor alignment architecture by aligning pretraining vision models with LLM and
+q (ii)theearly-fusionarchitecturewhichreceivesmixedvisualandtexttokens
+of E(x) in Z, and use it to reconstruct the image with the
+andreliesonautoregressivemodelingformulti-modalunderstanding.
+decoder: xˆ=D(z ). This provides a way to convert between
+q
+images and discrete tokens.
+C. Image LLM
+ComparedtoVQ-VAEs,VQGAN[21],[22]utilizesaGAN
+perceptual loss to replace the L2 reconstruction loss, which We will follow the multi-modal LLM architectures section,
+helps to learn a rich codebook. We use a simple example to and elaborate on the latest advancement of image LLM.
+illustratetheprocessoftokenization.Ifwehaveaninputimage 1) Alignment-Architecture Image LLM: This architecture
+of size H ×W ×3, after the encoder E, we obtain a lower- treats the image input as an additional extension. The vision
+dimension vector E(x) of size h×w×n , where h<H and encoders are usually frozen and the alignment modules and
+c
+w <W andn denotethedimensionsofthecode.Thismeans LLM are tuned based on various strategies to align the multi-
+c
+we can obtain h×w vectors of dimension n , and for each modal content and instructions.
+c
+vector, we will find its nearest neighbor in the code book for a) Vision Encoder is a module that extracts crucial infor-
+discretizationsothatwewillfinallyobtainadiscretesequence mationfromimages.Commongenericvisionencodersinclude
+of length h×w to represent the image. ResNet[26],theCLIP-ViTencoder[16],andImageBind[27].
+Remark. On the one hand, VQGAN and VQ-VAE can be ResNet and CLIP are pretrained on image-text modalities,
+used as visual tokenizers to transform an image into discrete while ImageBind aligns embeddings from six modalities into
+tokens, which enables it to be received by LLMs for visual a shared space, enabling vision encoders to capture richer
+understanding. On the other hand, they can be used for information.
+compressing an image into a lower-dimensional space, which b) Alignment Module, also named projector, adapter, etc.,
+motivates the well-known latent diffusion model (LDM) [23]. aims to mitigate the gap between image features and lexical
+word tokens and further fuse two modalities. LLaVA [28]
+adopts a simple but effective linear projection to convert
+B. Multi-modal LLM Architectures
+image features into word token embedding space and then
+We categorize existing multi-modal LLM architectures into it concatenates image tokens and word tokens. Such align-
+two branches, the early-fusion architectures and alignment ment only involves image transformation, limiting interaction
+architectures,asshowninFig.3.Mostexistingworks[4],[14], with texts, and is not flexible in the visual token number.
+[15] adopt the alignment architecture, which aims to align the Resampler[29]techniquemapsvarying-sizefeaturestoafixed
+vision model from the vision-language pretraining with the number of tokens. BLIP-2 [24] and MiniGPT-4 [30] employ
+pretrained LLM. This branch of models relies on the vision- Q-former [24] before linear projections to reduce tokens. Q-
+language pretraining to understand the visual input. After former incorporates text semantics and models the interaction
+obtaining the embedding of the image, an alignment module between image features and text inputs with learnable queries
+such as a projector [4], or Q-Former [24] is used to align the to enhance the most useful visual content for LLM. Some
+imageembeddingwiththeLLMspace.Totrainthealignment works focus on preserving locality during projection, such as
+module, some text-image or text-video pairs are required to Honeybee[31],whichintroducesalocality-enhancedprojector
+input the model. A typical way to align is to make the LLM to maintain spatial structure. Others prioritize efficiency, like
+output the caption of an image given an image embedding. TokenPacker [32], which adopts a coarse-to-fine strategy to
+In contrast, as shown on the right of Fig. 3, the early-fusion compress visual tokens while retaining important details.
+architectures[3],[25]donotrelyonapretrainedvisionmodel 2) Early-fusionArchitectureImageLLM: Thealignmentar-
+to obtain the semantics of the input image. Instead, similar to chitectureutilizesthepowerofoff-the-shelfLLMandrequires
+NLP where each word is mapped to a token, the early-fusion lowercomputations,butpretrainedvisionencoderswouldhave
+architecture maps each visual input into visual tokens through informationlossandbeinfectedbyinductivebiasesbecauseof
+avisualtokenizer.Thenamulti-modalautoregressivelanguage thegapbetweenlimitedpretrainingtasksandrealdemandsfor
+modelwillreceivethemixedtextandvisualtokens,andoutput imageLLM,suchassupportingflexibleresolution.Therefore,
+the user’s desired answers. asshowninFig.3,anotherlineofworkaimstotrainamulti-
+Next, with the overall architecture in mind, we will intro- modal LLM from scratch, where both images and text words
+duce recent advances in image LLMs and video LLMs. are converted into a series of tokens.
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 4
+Pioneer work Fuyu [33] adopts linear projections on image and discretization, there inevitably exists visual information
+patchesinspatialorderandtrainsatransformerdecodertaking loss. How to train a tokenizer that contains rich visual in-
+the visual and word token sequence as input. Despite limited formation still remains a challenging problem. Second, the
+performance, it reveals a new technical fashion. Google fol- visual tokenizers are generally trained with the image recon-
+lowsthisfashionwhoseGemini[25]processestheinterleaved struction objective, which in essence belongs to a pixel-level
+imageandothermodalitiesfromthebeginning.Chameleon[3] task instead of a semantic-level task. This training strategy
+trains an image tokenizer that encodes a 512x512 image into requires that the downstream multi-modal LLMs should have
+1024 discrete tokens from a codebook of size 8192. Early- an additional ability to learn semantic meanings from the
+fusion Architecture requires much more computation and pixel-levelinformation,comparedtotheoriginalLLMswhich
+it’s more difficult to converge, leaving challenges for future are only expected to understand semantic tokens. Therefore,
+exploration. the multi-modal LLMs tend to require much more data for
+3) Challenges in Image LLM: (i) Fine-grained visual training.
+conceptunderstanding,wheremoretokenshelpencodemore
+detailed information at the cost of causing redundant com-
+D. Video LLM
+putation. Chat-UniVi [34] proposes dynamic visual tokens to
+allocatemorecomputationsonimportantdetails.Animportant Following the success of Image LLMs, researchers start
+part of fine-grained understanding is the spatial awareness exploring the training of Video LLMs [47]. Typically, videos
+of object concepts. AnyRef [35] applies RoIAlign to encode are viewed as sequences of image frames (some Video LLMs
+regionsanddesignssegmentencoder-decodertolearnsegmen- incorporate other modalities like audio or speech), so Video
+tation from the image LLM’s token outputs, which is similar LLMs have a higher computational complexity compared to
+to OMG-LLaVA [36] who generates pixel- and object-centric Image LLMs. The challenge of collecting high-quality video
+visual tokens before projections and decodes segmentation datasetsfurthercomplicatesthetrainingprocess,makingearly
+tokens from LLM’s output by OMG-Seg. Different from fusion architectures computationally exhaustive. As a result,
+segmentation supervision, VisionLLM [37] and Virtron [38] almost all the existing Video LLMs adopt the alignment
+use text supervision such as bounding and polygon descrip- architectures.
+tions by flexible instruction tuning. Fine granularity modeling 1) Alignment-Architecture Video LLM: The video LLM
+offerssomeexplanationsforLLM.(ii)Hallucinationinvolves architecture is similar to that of Image LLMs with alignment
+errors in objects, attributes, and relations in the forms of architectures. By sampling a fixed number of frames or using
+judgment or description [39]. Some works [40] try to reduce a fixed frames-per-second (FPS) rate, videos are reduced to a
+biases in training data while some mitigate hallucination via limited set of images. The visual embeddings of each image
+improving model characteristics like vision encoders [41] or are then extracted using a visual encoder. These features
+fusion mechanisms [42]. Human feedbacks [43] also play an are sequentially concatenated in the order of the frames and
+important role in reducing hallucination. connected to the LLM via an alignment module. In earlier
+Remark. Currently, the alignment architecture still outper- works, VideoChat [48] utilizes a Q-former structure as the
+forms the early-fusion architecture in multi-modal under- alignment module, while VideoLLaMA [49] introduces an
+standing, e.g., with comparable parameters, the early-fusion audio encoder and an audio Q-former to handle audio signals.
+architecture Emu3 [44] achieves 75.1 score on VQAv2 [45] Video-ChatGPT [50] takes a different approach by average-
+benchmark and 58.5 score on MMBench [46] benchmark, pooling each frame’s patch embeddings along the spatial
+while the early-fusion architecture LLAVA-1.6 achieves 86.8 and temporal dimensions before using a linear layer as the
+and 67.4 score, respectively. The advantage and disadvantage alignment module. Training Video LLMs also follows an
+of the two architectures are as follows: (i) The advantage lies “alignment then instruction tuning” strategy. While additional
+in its capability of utilizing the pretrained knowledge from GPT-annotated or human-annotated video datasets are col-
+the vision encoder and LLM. The vision-language pretraining lected,imagedatasetscanalsobeleveragedbytreatingimages
+enables the output of the vision encoder to contain semantic as single-frame videos.
+meanings. Only the alignment module needs to be trained, Recent successful efforts focus on improving performance
+which makes this paradigm resource-friendly. (Sometimes byrefiningthealignmentmoduleandscalingupthemodeland
+other modules are also learnable for better performance.) dataset sizes. For instance, VideoLLaMA2 [51] improves the
+However, its ability is also limited by the pretrained vision alignment module to model the connections across temporal
+encoder and LLM, e.g., the pretrained CLIP vision encoder and spatial dimensions. It also gathers datasets for tasks
+often struggles with multiple objects, making the multi-modal such as captioning, classification, and question answering.
+LLMs based on CLIP inherit the limitation. (ii) The disad- Qwen2.5-VL [52] and InternVL3 [53] leverage diverse train-
+vantage comes from the fact that the early-fusion architecture ing data including images, videos, and interleaved image–text
+may have a higher potential, because all its parameters are pairs to build powerful vision-language models.
+trainedfromscratch.However,trainingfromscratchmakesthe 2) ChallengesandLimitationsinVideoLLM: Comparedto
+early-fusionarchitecturefacetwochallenges:(a)agoodvisual Image LLMs, Video LLMs face two unique challenges. The
+tokenizer needs to be trained and (b) more resources will be first challenge is understanding videos at a finer granularity,
+needed to train the multi-modal autoregressive model. First, specifically the comprehension of video segments and the
+since the visual tokenization process involves compression relationships between these segments. The second challenge
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 5
+isunderstandinglong-formvideos,suchasmovies,withinthe
+limited context length of LLMs.
+Encoder
+ℰ
+For segment-level video understanding, VTimeLLM [14] latents real sample𝑥 Discriminator
+transforms the temporal video grounding and dense video 𝒟 𝑥 𝜇! Σ!
+captioning tasks into a sequence-to-sequence format. After
+Generator 𝑧
+alignment training, it introduces an additional boundary per- 𝒢
+Decoder
+ception training, leveraging large-scale multi-event video-text generated fake 𝒟
+smaple𝑥!
+data to enhance awareness of event boundaries and times- 𝑥!
+GAN VAE
+tamps. Finally, it incorporates temporal reasoning data during
+instructiontuning.Someapproaches[54],[55]adopttraining- Diffusion process
+𝑞(𝑥#|𝑥#$%)
+free methods, where sampled frames are individually cap-
+tioned, and each frame’s timestamp and caption are input into
+Unet
+… …
+an LLM via carefully crafted prompts, allowing the LLM’s 𝑝"(𝑥#$%|𝑥#)
+powerful reasoning capabilities to comprehend each segment. 𝑥’ 𝑥#
+Diffusion
+𝑥#$% 𝑥&
+For long-form videos, traditional Video LLMs struggle
+with input limitations. For example, a Q-former in BLIP- Fig. 4. The comparison of fundamental architectures of GANs, VAEs, and
+2 encodes an image into 32 tokens; sampling 256 frames diffusions.
+results in 8K tokens, which reaches the maximum context
+length of most LLMs. However, this represents less than 5
+A. Preliminaries
+minutes of video at a sampling rate of 1 FPS. Therefore,
+We will first introduce some preliminaries, including tradi-
+more efficient representations are necessary for processing
+tional generative models, i.e., generative adversarial networks
+long-form videos like movies. MovieChat [56] introduces a
+(GANs) and Variational AutoEncoders (VAEs). Then the dif-
+memory consolidation mechanism that merges similar im-
+fusion probabilistic modeling will be introduced, followed by
+age tokens once the token limit is reached. LWM [57] and
+comparisons of GANs, VAEs and Diffusions in Fig. 4.
+LongVA [58] handle long video inputs by using LLMs with
+1) Generative Adversarial Networks: The generative ad-
+largercontextlengthsandmoreefficientattentionmechanisms.
+versarial network (GAN) [61] is one of the earliest neu-
+Some methods [14], [59] reduce the number of tokens per
+ral architectures designed to generate visual content such
+frame, representing each frame with only 1 or 2 tokens on
+as images [62] and videos [63]. The main idea of GANs
+average. Other approaches [60] convert long-form videos into
+involves two networks: a generator G and a discriminator D.
+text corpus using image captioning and employ LLMs as
+Specifically, G aims to generate visual content from a noise
+agents to search for specific answers within the text corpus.
+vector z, while D is trained to distinguish between real visual
+Despite the advancements in Video LLMs, nearly all ex-
+samples x and generated ones G(z). These two networks are
+isting models rely on sampling frames and encoding them
+trainedinanadversarialmanner:thegeneratortriestoproduce
+individually through image encoders. This approach may
+outputs that can fool the discriminator, and the discriminator
+be favored due to several reasons: image encoders are less
+strives to accurately classify real versus fake samples. The
+computationally intensive compared to video encoders, they
+training process forms a min-max game, where the generator
+offer better alignment with textual data, and they facilitate
+learns to generate increasingly realistic samples to deceive a
+unification with Image LLMs. However, this methodology
+progressively stronger discriminator.
+comeswithasignificantlimitation.Specifically,theprocessof
+2) Variational AutoEncoder: Variational AutoEncoder [64]
+sampling frames can lead to the complete loss of information
+(VAE) is another typical generative model. Unlike GANs,
+thatoccursbetweensampledframes.Asaresult,thesemodels
+autoencoders have an encoder-decoder architecture that uses
+fail to capture the continuous motion and trajectories of
+an encoder E to present the visual content x to a latent code
+objects, which are essential for understanding dynamic scenes
+z =E(x)andadecoderDtoreconstructthedataxˆ=D(z)≈
+and activities within a video.
+x. However, normal autoencoders have no constraints to the
+Nowwehavediscussedthemulti-modalLLMforvisualun-
+latentspace,whichmakesitoverfitthedataseteasily.Tosolve
+derstanding. Next, we will discuss another important topic of
+the problem, VAEs make a regularization to the latent space
+multi-modal generative AI, i.e., multi-modal diffusion models
+and sample z from a distribution p , typically a Gaussian
+θ
+for visual generation.
+distribution, where θ is the parameters of the encoder-decoder
+model.
+Despite the successful introduction of VAEs, they still face
+III. MULTI-MODALDIFFUSIONFORGENERATION a significant issue where the model ignores the information
+in the latent space and relies solely on a powerful decoder
+Diffusionmodelshavebeenoneofthemostsuccessfulgen- to reconstruct the data, a phenomenon known as “posterior
+erative models in visual generation given texts and are widely collapse”. To address this problem, the VQ-VAE [65] uti-
+used in multi-modal generation tasks. We present the famous lizes discrete encoding to learn the prior and employs vector
+latent diffusion model [23], and discuss several advanced quantization methods to prevent the latents from becoming
+diffusion-based text-to-image and text-to-video models. uninformative.
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 6
+3) Diffusion Probabilistic Modeling: Compared to GANs
+and VAEs, a new branch of generative models, diffusion Diffusion Process 𝐸 Diffusion Process
+models [23], [66], [67] have become dominant in many tasks 𝑥 ×𝑇 𝑛𝑜𝑖𝑠𝑒 𝑥 𝑧 ×𝑇 𝑧𝑇
+such as text-to-image generation or text-to-video generation.
+Denoising 𝐷 Denoising
+The core idea of diffusion modeling is to learn the transfor- Network(𝜖𝜃) Network(𝜖𝜃)
+mationbetweentherealdatadistributionq(x 0)andastandard 𝑥ො 𝑥ො 𝑧Ƹ
+Latent Space
+Gaussian distribution q(x ).
+T Pixel-level diffusion model Latent diffusion model
+We briefly introduce the denoising diffusion probabilistic
+model (DDPM), which includes the forward and backward Fig.5. Comparisonbetweenpixel-leveldiffusionmodelsandlatentdiffusion
+processes. In the forward process, given a real data sample models.
+x , it will go through a Markov process with more and more
+0
+random Gaussian noise added to the sample as follows:
+B. Text-to-Image Generation
+(cid:112)
+q(x |x )=N(x ; 1−β x ,β I),t=0,1,··· ,T (2)
+t t−1 t t t−1 t 1) Text-to-Image Diffusion Model: As mentioned in the
+where t is the time step, T is usually large so that x is preliminary part, diffusion models can be broadly categorized
+T
+closetoaGaussiannoise,andβ isaparametertocontrolthe into two branches: pixel-based and latent-based [71]. In the
+t
+noiseschedule.Conversely,toachievegenerationfromrandom early development stage, the denoising process is typically
+noise, what DDPM does in the backward process is to learn applied directly in the pixel space. For instance, GLIDE [72]
+the following distribution: is a pioneering work in photorealistic image generation with
+text guidance, using a 3.5 billion parameter diffusion model
+p (x |x )=N(x ;µ (x ,t),Σ (x ,t)), (3)
+θ t−1 t t−1 θ t θ t that employs a text encoder to condition on natural language
+where a neural network parameterized by θ is designed to descriptions. GLIDE also explores the use of CLIP guid-
+predict the less noisy image x . Then, with this denoising ance and classifier-free guidance in diffusion models, finding
+t−1
+network θ, we can denoise from a random noise x step by that classifier-free guidance produces higher-quality images.
+T
+step until we get a clean data sample x , which could be an Besides, Imagen [73] follows GLIDE and adopts classifier-
+0
+image or a video, etc. free guidance for its pixel-based diffusion model. The key
+Remark. GANs, VAEs, and diffusion models are all gen- difference between them is that GLIDE trains text encoder
+erative models. Compared to GANs which train both the and diffusion model together with text-image pair, while Ima-
+generatoranddiscriminator,thediffusionmodelshaveexplicit gen utilizes pretrained and frozen large transformer language
+probabilisticmodeling,andonlytraina denoisingnetworkϵ , models, leveraging their strong text understanding capabilities
+θ
+which is more stable. Similarly, VAEs train both an encoder to enhance sample fidelity and image-text alignment.
+and a decoder. Moreover, diffusions denoise for each image However,directlyoperatinginpixelspacerequiressubstan-
+T times in the training phase, resulting in T variants of each tial computational resources, which leads to the appearance
+image as augmentation. These augmented images in turn help of latent-based diffusion models. A milestone in this area
+the denoising network to better model the data distribution is Stable Diffusion [74], which introduces the concept of
+p (x ), leading to better generation results. latentdiffusionmodeltostrikeanear-optimalbalancebetween
+θ 0
+4) LatentDiffusionModel: AsshowninEq.(2)andEq.(3), complexity reduction and detail preservation. It incorporates
+the denoising process of diffusion models is conducted on the a pretrained VQGAN to compress images from pixel space
+pixels of each image in an iterative manner, which results in into semantic latent space. Compared to pixel-based diffu-
+high computational cost, especially when the generated image sion methods, Stable Diffusion not only achieves competitive
+is high-resolution. To tackle this problem, the latent diffusion performance across multiple image generation tasks but also
+model (LDM) [23] proposed to conduct the diffusion process significantlyreducesbothtrainingandinferencecosts.Another
+in the latent space instead of the pixel space. The framework notable example of a latent-based model is DALL-E2 [75],
+comparisonbetweenthepixel-leveldiffusionmodelandLDM whichcombinesaCLIPmodelandadiffusionmodeltoenable
+is shown in Fig. 5. To reduce the computational cost, LDM zero-shot text-guided image generation. DALL-E2 consists of
+utilizes the encoder of VQGAN [21] to compress the image a CLIP image encoder and a diffusion decoder that inverts
+into the latent space, z = E(x), which has a much lower the encoder, allowing for explicit generation of image rep-
+dimensionthantheoriginalimage.Then,thediffusionprocess resentations. This approach improves image diversity while
+in Eq. (2) and Eq. (3) will be conducted in the latent space. maintaining photorealism and caption similarity.
+Note that there is an additional input c of the denoising GLIDE [72], Imagen [73], Stable Diffusion [74], and
+networkthatisforconditionalgeneration,e.g.,asforthetext- DALL-E2 [75] are all pioneering works that represent dif-
+to-image generation task, c could be the representation of the ferent technological pathways in the field of text-to-image
+text prompt [68]. Also, c could be other conditions, such as generation. Despite their differences, some common trends
+layout [69] or semantic maps [70]. have emerged in their development. First, latent-based dif-
+Since most computation including the training and iterative fusion methods have become increasingly prevalent due to
+inferenceisconductedinthelower-dimensionlatentspace,the their advantages in conserving computational resources and
+LDM model exhibits high efficiency. Therefore, most text-to- generatinghigh-qualityimages.Second,comparedtoclassifier
+image and text-to-video models adopt the LDM structure. guidance[76],classifier-freeguidance[77]arewidelyadopted
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 7
+Denoising U-Net Denoising Transformer + + +
+KQ V KQ V KQ V KQ V Patchify Scale 𝛼𝛼2 FeP eo din fotw rwis ae rd FeP eo din fotw rwis ae rd
+Condition Condition FeP eo din fotw rwis ae rd Layer Norm Layer Norm
+Timestep Timestep EmbedN ×DiT Block LNLinear
+Scale, Shift +
+U-Net-BasedDiffusion Model Transformer-BasedDiffusionModel 𝛾𝛾2,𝛽𝛽2 +
+Layer Norm Multi-Head
+Cross-Attention Multi-Head
++ Cross-Attention
+Fig.6. ComparisonbetweenU-Net-baseddiffusionmodelandTransformer- Layer Norm
+Scale
+baseddiffusionmodel. 𝛼𝛼1 Layer Norm
+Multi-Head +
+Self-Attention
+Multi-Head
+Scale, Shift Self-Attention Concatenate
+intheseworks,wherethelabelinaclass-conditionaldiffusion 𝛾𝛾1,𝛽𝛽1 o Dn iS me eq nu se ion nce
+Layer Norm MLP Layer Norm
+modelisreplacedwithanulllabelatafixedprobabilityduring
+Input Tokens Conditioning Input Tokens Conditioning Input Tokens Conditioning
+training. Third, U-Net traditionally serves as the backbone
+of the diffusion model, facilitating denoising and the gradual DiTBlockwith adaLN-Zero DiTBlockwith Cross-Attention DiTBlockwith In-Context Conditioning
+generation of high-quality images.
+Fig.7. ComparisonbetweendifferentDiTblocksfrom[78].
+Despite its advantages in high-resolution image generation,
+U-Net’s specific structures, such as ResBlocks and convolu-
+tional operations, limit its scalability. In contrast, Transform- servingastheinteractionmodulebetweentheimagelatentand
+ers, which are better suited to handle larger-scale data and thetimestepandcondition.ThisblockaddsthemostGflopsto
+tasks, are emerging as strong contenders to U-Net. The Dif- themodel.Thein-contextconditioningblocktreatsthetokens
+fusion Transformer (DiT) [78] represents a class of diffusion from the timestep and condition in the same way as image
+modelsthatreplacesthecommonlyusedU-Netbackbonewith tokens, concatenating them along the sequence dimension.
+a transformer backbone as shown in Fig. 6. This approach This block introduces a moderate amount of Gflops.
+is supported by empirical findings suggesting that the U-Net Following the development of DiT [78], a growing number
+inductive bias is not crucial to the performance of diffu- of works are exploring variants of diffusion transformers with
+sion models. Additionally, utilizing a transformer backbone improvedperformance.Forinstance,CrossDiT[79]combines
+enables the diffusion model to leverage the best practices the adaLN-zero DiT block and cross-attention DiT block.
+of transformers, such as architectural design and training It simplifies adaLN-zero layers to adaLN-single layers by
+paradigms, along with their good properties like scalability, removing label conditioning and using only time conditioning
+robustness, and efficiency. Specifically, DiT adheres to the for scale and shift control. It incorporates text embeddings
+foundation of the Latent Diffusion Model (LDM) framework fromT5[80]intothemulti-headcross-attentionlayer.Another
+and emulates the design of the Vision Transformer (ViT) notable variant is MM-DiT [81], which integrates the adaLN-
+by introducing a comprehensive DiT design space, including zero DiT block and in-context conditioning DiT block. This
+patchsize,transformerblockarchitecture,andmodelsize.The model uses text embeddings from CLIP and timestamps to
+first layer of DiT, termed patchify, converts the spatial input condition the network, employs two separate sets of weights
+into a sequence of tokens by linearly embedding each patch. for image and condition modalities, and concatenates image
+Following the patchify step, the input tokens are processed and condition for the attention operation. Empirical experi-
+through a sequence of transformer blocks that incorporate ments show that both CrossDiT and MM-DiT outperform the
+conditioningsuchastimeandlabel.Theproposedtransformer vanilla DiT in terms of validation loss, CLIP score, and FID.
+design includes adaptive layer norm (adaLN) block, cross- The designs of diffusion transformer variants are distinct
+attention block, and in-context conditioning block. After the from each other, but they basically derive from the three core
+final block, a transformer decoder translates the image tokens architectures proposed by DiT: the adaLN-zero block, the
+into output predictions. The difference between U-Net-based cross-attention block, and the in-context conditioning block.
+diffusion model and Transformer-based diffusion model is Currently, MM-DiT, which combines the adaLN-zero block
+illustrated in Fig. 6. with in-context conditioning, represents the state-of-the-art
+The three distinct transformer blocks are the core modules architecture. Its advantage lies in training the text modality
+of DiT, representing different ways to interact with multi- iteratively alongside the diffusion process in an in-context
+modal information, including images, timestep, and condi- manner rather than keeping it frozen, which produces a more
+tions. Their designs are inspired by the standard ViT block diverse semantic space.
+design but incorporate small yet significant modifications. As 2) Controllable Generation with Diffusion Model: Despite
+illustratedinFig.7,theseblocksdifferinhowtheimagelatent the success of diffusion models in generating photorealis-
+interacts with the conditioning information. The adaLN block tic images, this text-to-image technique falls short of fully
+follows the adaptive normalization layers in GANs, replacing meeting the increasing and diverse user requirements, such as
+the standard normalization layers in transformer blocks. The fine-grained control or specific customization. For instance,
+scale and shift parameters in this block are determined by the creating a portrait of an ordinary individual based solely on
+sumoftheembeddingvectorsoftimestepandcondition.This a name and physical description is beyond the capabilities of
+block adds the least Gflops to the model. The cross-attention current text-to-image diffusion models. As a result, ongoing
+blockintroducesanadditionalmulti-headcross-attentionlayer, efforts are improving diffusion models to allow for more
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 8
+or fine-tuning time, but they are restricted to controlling only
+a limited range of conditions, such as layout or style.
+Controllable generation involves customizing various as-
+𝑥 𝑥ො pects of an image, such as subject, layout, and style [82].
+𝑐𝑡𝑒𝑥𝑡 𝑐𝑎𝑑𝑑
+Among these, the primary control condition is the subject of
+Model-Based
+an image, known as subject-driven generation [85], [87]. For
+instance,whenauserdescribesanimagewithaphraselike“a
+dog isrunning on the beach”, thedog may not bean arbitrary
+𝑥 𝑥ො onebutaspecific,familiardog.Toachievethis,sampleimages
+𝑐𝑡𝑒𝑥𝑡 𝑐𝑎𝑑𝑑 of the dog are provided as an additional condition, and an
+Tuning-Based uncommonword,suchas“[V]”,“sks”,or“S*”,isassignedto
+the description to represent the specific subject. A related but
+more specialized area is person-driven generation [88], [89],
+which focuses on maintaining a consistent human identity,
+𝑥 𝑥ො
+𝑐𝑡𝑒𝑥𝑡 𝑐𝑎𝑑𝑑 depicting a person with different expressions, postures, and
+Training-Free actions. Compared to subject-driven generation, layout, and
+style-driven generation focus on the overall composition of
+Fig. 8. Model-based, tuning-based, and training-free controllable text-to- the image. Layout conditions [90], [91] control the relative
+imagegeneration.
+positionsofdifferentsubjectsandthebackground,whilestyle
+conditions [92], [93] determine the artistic style of the image,
+suchasoilpainting,black-and-white,orlineart.Additionally,
+precise control through additional conditions beyond text.
+other novel conditions, such as sound, brain signals, and
+Compared to original text-based image generation, con- semantic maps, are being explored to control text-to-image
+trollable generation involves introducing additional conditions generation,offeringnewandsubtlewaystoinfluencethemood
+c add without compromising the original text condition c text. and perception of an image.
+From the perspective of control mechanisms, related methods Beyondaddressingspecificconditions,manystudiesexplore
+can be categorized into three classes: model-based, tuning- complex control involving multiple conditions. For exam-
+based, and training-free [82], as illustrated in Fig. 8. Model- ple, generating multiple customized subjects performing user-
+based methods incorporate extra models to encode the addi- defined actions is particularly challenging because the model
+tionalconditionsandintegratethemintothediffusionprocess. might confuse or forget the specified conditions. Thus, multi-
+For instance, InstantBooth [83] employs a patch encoder and pleconditioningcontrolinvolvesmorethansimplycombining
+a concept encoder to encode personalized sample images and various specific conditions; it requires their interaction in a
+incorporatesadapterlayerstotheU-Netforconditionsinterac- well-designed manner.
+tion.Theseextramodels,includingencodersandadapters,are Existing methods for controlling generation with multiple
+trainable,whileothercomponentsofthemodelremainfrozen. conditions can be categorized as follows. Joint training meth-
+Tuning-basedmethodsdonotrequireextramodelsbutinstead ods [94], [95] rely on multi-condition encoders and special-
+fine-tune certain parts of the original diffusion model to adapt ized training strategies to manage diverse conditions simul-
+to specific conditions. For example, Textual Inversion [84] taneously. Continual learning methods [96], [97] incorporate
+fine-tunes the text encoder, while Dreambooth [85] fine-tunes strategies from the field of continual learning to effectively
+theU-Net.Inthesetuning-basedmethods,Parameter-Efficient handle conditions that arise sequentially. Weight fusion meth-
+Fine-Tuning (PEFT) techniques are often employed to re- ods[98],[99]assignweightstoallconditionsandblendthese
+place traditional fine-tuning, thereby reducing computational weights cohesively to ensure comprehensive control over all
+resources. Training-free methods eliminate the need for any conditions. Attention-based integration methods [99], [100]
+training or fine-tuning process, instead controlling generation modify the attention map to adaptively position and prioritize
+by leveraging the intrinsic capabilities of the U-Net structure, different conditions. Guidance composition methods [101],
+such as attention. For example, StyleAligned [86] achieves [102] integrate the independent denoising results of each
+consistent style generation by employing minimal “attention condition to achieve a unified output.
+sharing” during the diffusion process, where all images share
+self-attention with the reference image.
+C. Text-to-Video Generation
+Each of these three methods has its own strengths and
+weaknesses. Model-based methods introduce additional mod- 1) Text-to-Video Diffusion Models: Due to the success of
+els and require a tuning process, generally consuming the diffusionmodelsintext-to-imagetasks,manyresearchershave
+most computational resources. However, once the encoders introduced temporal information to the diffusion models and
+and adapters are fully trained, they can be easily adapted utilized the capability of generating high-quality images to
+to different conditions. Tuning-based methods save compu- conduct text-to-video models.
+tational resources by not incorporating extra models, but they The most intuitive approach to utilizing the text-to-image
+are limited to adapting to a single specific condition per fine- model is modifying the self-attention mechanism, which gets
+tuning.Training-freemethodsdonotrequireanyextramodels the text-to-video model without any additional parameters.
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 9
+Text2Video-Zero [103] is one of the pioneer works. Rather TheDiT-basedmethodsarecommonlyadoptedinaccomplish-
+than random initial the latents of all frames independently, ing some outstanding applications within the industry.
+Text2Video-Zero only samples the latent code z1 of the first At this point, the basic text-to-video models have been
+T
+frame and applies ∆t DDIM backward steps to obtain z1 . constructed based on the text-to-image model. However, there
+T′
+After that, Text2Video-Zero determines the global scene and are still two problems. The first problem lies in the fact that
+a camera motion direction, proposes a warping function W thesemethodscanonlycontrolthegenerationofvideothrough
+k
+to get all F frames from z1 to zF , and then performs a text, and it is usually difficult to describe all aspects of the
+T′ T′
+DDPM forward to get the initial latents. To keep the con- requirements of the video in text. How to better control the
+sistency among different frames, Text2Video-Zero proposes generationofvideoisanimportantissue.Thesecondproblem
+cross-frameattentionwhichuseskeysandvaluesfromthefirst lies in the fact that, limited by the scale of model parameters
+frame to generate the images. Latent-Shift [104] is another and GPU memory, most of the videos generated by these
+representative method. It proposes a novel Temporal-Shift methods are in the range of 16-24 frames, which makes it
+module that splits the latents along the channel dimension difficulttosatisfytheneedsofreal-lifeusersofneedsofvisual
+and shifts the split channel along the temporal dimension content. Next, we will analyze these two issues and discuss
+to keep the consistency of all frames. These methods have some related works.
+fully used the powerful pretrained text-to-image models and 2) ControllableGenerationwithDiffusionModel: Forcon-
+can generate videos with much higher resolution and quality trollable generation, the key challenge is how to choose
+thantraditionaltext-to-videomethodsusingGANsandVAEs. suitable conditioning information and how to utilize this
+However,ratherthancapturing,training,andunderstandingthe information fully.
+temporal information, these methods are more like to provide An intuitive way to do this is to use existing videos,
+a class of expert knowledge that can utilize the temporal which can be regarded as video editing [110]–[113]. Stable-
+information from a human perspective. Thus, these methods Video [111] first introduces a pretrained model to split fore-
+enjoy high generation efficiency but the videos generated still ground and background and edits them separately. To better
+struggle with motion smoothness, dynamic degree, and video maintain the consistency of subjects, StableVideo proposes an
+consistency. inter-frame propagation mechanism that utilizes the layered
+To solve the problems, another kind of approaches [105]– representations to keep information between different frames.
+[107] not only inherits the architecture of the T2I models Rerender-A-Video [112] proposes a novel two-stage editing
+but also makes efforts to introduce novel modules or mod- approach. In the first stage, Rerender-A-Video identifies the
+ify the original structure to learn the temporal information. keyframes of the reference video and edits them according
+VDM [105] is one of the earliest works that transferred the to the given prompt. To ensure effectiveness, Rerender-A-
+T2ImodeltosolveT2Vtasks.VDMproposesa3DU-Netthat Video introduces a pretrained image diffusion model with
+modifiesthediffusionarchitecturebychangingeach2Dspatial hierarchical cross-frame constraints. The second stage uti-
+convolutionallayer intoa 3Dconvolution. Afterthat, foreach lizes the edited keyframes to perform overall video editing
+spatialattentionblock,VDMinsertsatemporalattentionblock through temporal-aware patch matching and frame blending.
+that performs attention over all frames with relative position FateZero [113] makes full use of the information provided
+embeddings to distinguish the ordering of frames. Make-a- by the attention maps during inversion. On the one hand,
+video[106]proposedapseudo-3Dconvolutionalandattention they encapsulate a wealth of layout and motion information
+layer which consists of a spatial 2D convolutional layer and from the original video. On the other hand, through the cross-
+a temporal 1D convolutional layer. Compared to 3D convo- attention maps, a novel blending mask can be derived. These
+lution, this approach is much more efficient while facilitating masks indicate the information that influences the subject
+informationsharingbetweenthespatialandtemporalaxes.To requiring editing, thereby minimizing semantic loss during
+more flexibly apply the capabilities of the T2I model such subject editing.
+as the customization and style transferring ability brought by It can be found that these methods usually utilize two
+LoRA, AnimateDiff [107] keeps the original architecture and aspects of the reference video. One is the overall layout
+only inserts a motion module after each pretrained layer. The information of the video, including the position of the ob-
+motion module consists of an input projection layer, several ject, the motion trajectory, etc. The other is the attributes
+temporal self-attention layers, and an output projection layer. of the subjects requiring editing, with appropriate extraction
+To avoid harming the original capabilities of T2I models, and adjustment. This also implies that not all information
+AnimateDiff zero initializes the output projection layer. in the video is valid according to the situation, such as
+As the attention-based architecture is more suitable for the color or shape of an object, which often proves to be
+capturing long-range contextual relationships, some meth- disruptivewhenweintendtoeditit.Withsuchconsiderations,
+ods [108], [109] adopt a DiT-based model to generate videos. certain approaches initially involve pre-extracting conditional
+Latte [108] utilizes a video transformer as the backbone and information through auxiliary networks, and then feeding this
+employsaVAEtoencodevideosintofeatures,whichisusedto preprocessed information into the generative model, aiming
+extract tokens. Currently, compared to U-Net-based methods, for improved controllability over video generation.
+DiT-basedmethodscanscaletolargerdatasetsandparameters, Inspiredbycontrollablegenerationmethodsusedintext-to-
+hence yielding relatively better performance. However, this image tasks, ControlNet [114] is introduced to text-to-video
+alsoimpliesahigherconsumptionofcomputationalresources. generation [115]–[117]. It utilizes the information extracted
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 10
+from each frame of videos, such as skeleton, depth map, tionforgeneratingvideosthatsatisfythedesiredlayouts,LVD
+and optical flow, to generate videos that satisfy the provided introducesaDSL-guidedvideogenerator.Itdesignsanenergy
+text prompt. Control-A-Video [115] utilizes a ControlNet to functiontoassessthedegreeofoverlapbetweenthegenerated
+controlthegenerationprocessbydifferenttypesofconditional objects and the required bounding boxes and influences the
+information. Besides, to improve the consistency, Control- object positions during denoising by minimizing the energy
+A-Video proposes a novel residual-based noise initialization function and back-propagation. CameraCtrl [126] proposes
+strategy that introduces motion prior to the diffusion process. a novel plug-and-play module that can control the camera
+VideoControlNet[116]proposesamotion-guidedmethodthat trajectory for text-to-video generation. It trains a camera
+uses an auxiliary model to predict the optical flow between encoder that can output multi-scale camera representations,
+keyframes. After generating the keyframes, VideoControlNet which are then utilized by the temporal attention layers of U-
+utilizes a motion-guided B-frame interpolation module to Nettocontrolthevideogenerationprocess.DisenStudio[124]
+generate the rest frames. In contrast to the aforementioned addresses the challenge of customized multi-subject text-to-
+methods, SparseCtrl [117] takes into account the potential videogenerationintherealworldwhereeachsubjecthasonly
+quality degradation that arises from using noisy latents as in- a few reference images available. It proposes a disentangled
+puts in traditional ControlNet. Therefore, SparseCtrl proposes spatial control approach to associate each subject with the
+a novel sparse condition encoder that proposes a sparse mask, desired action. Besides, DisenStudio proposes a novel multi-
+eliminating the noisy sample input and exclusively accepting subjectco-occurrencetuningandmaskedsingle-subjecttuning
+condition information. Other methods [118], [119] analogize to keep the visual attributes of given subjects, and a multi-
+condition information into embeddings and employ attention subject motion-preserved tuning method to maintain the tem-
+mechanisms to achieve controllable generation. Follow-Your- poral motion-generation ability. Kaleido [127] integrates this
+Pose [118] proposes a two-stage training strategy. In the first conditioninformationbyencodingdifferentcontrolconditions
+stage, Follow-Your-Pose trains a pose encoder to translate the to tokens, enabling more flexible multi-condition controllable
+frames of key points into specific embeddings. The second generation. However, employing control conditions beyond
+stage introduces a temporal self-attention and a cross-frame text inevitably leads to potential conflicts among multiple
+self-attention to keep consistency. During inference, Follow- conditions,resultinginadeclineinthequalityofthegenerated
+Your-Pose mixes the embeddings of poses and the latents to videos. This problem could serve as a challenging future
+control the video through the key points. direction.
+However, whether directly utilizing videos as control con- 3) Long Video Generation: Another challenge of the
+ditions or extracting crucial information from them,the afore- diffusion model is generating longer videos. Some ap-
+mentionedapproachesheavilyrelyontheinherentstructureof proaches [115], [117], [128], [129] leverage the controllable
+the reference videos being highly consistent with the desired generation methods mentioned before, splitting the whole
+generated videos. This limitation constrains the diversity in video into several smaller video chunks and generating them
+controllable video generation unless we possess an infinite in an autoregressive manner. Typically, they use the final
+videolibraryandexceptionallypowerfulvideoretrievalmeth- framesoftheprecedingchunkasareferenceandgeneratethe
+ods to cater to all the whimsical imaginings of users. Hence, next chunk to ensure complete the same in the overlapping
+other works also explore the use of simpler and more readily parts between chunks, thereby guaranteeing consistency and
+accessiblecontrolconditionstoexertfinercontroloverspecific smoothness across different chunks. Other than using addi-
+aspects of videos. tionalmodulestofullycontroltheoverlappingframesbetween
+Some methods attempt to control videos by emulating how chunks, FreeNoise [130] accomplishes the generation of long
+people shoot movies in real life, such as controlling the videos by performing specific operations on the latents of
+layouts[120],[121],adjustingcameraviews[107],[122],and overlapping frames between different chunks. FreeNoise no
+setting “actors” [123], [124]. Compared to previous control longer initializes noise for all frames but rearranges the noise
+methods, the major advantage of these approaches lies in the sequencestoachievelong-rangecorrelations,andappliestem-
+simplicity of their condition information, such as sequences poral attention through window-based fusion. The limitation
+of bounding boxes, a viewpoint with a direction, or images of this kind of method is that it often suffers from concept
+of objects. Simultaneously, they can effectively represent a drift as the video becomes longer. Additionally, it often fails
+specificsetofsignificantattributesofavideo.Thiseliminates to generate new backgrounds or videos with high dynamic
+theneedtoinvestsubstantialeffortsinsearchingforasuitable degrees.
+reference video before generating the video. Users can obtain Another way to generate longer videos is to rely on larger
+control information through their own understanding, either datasets and model parameters. Early works pretrain U-Net
+via a GUI for dragging and dropping or in numerous method. based diffusion models [131], [132] which can only generate
+This not only ensures controllability but also significantly 1-second or 2-second videos. More recently, by scaling the
+enhances the diversity of video generation. Next, we will DiT architecture for video generation, several works [2],
+briefly introduce several works of these methods. [133]–[135] can generate videos up to 1 minute, with high
+LVD [125] analyzes potential layout information within the resolutionandsmoothness.Despitetheirsuccess,thelengthof
+user-providedpromptthroughLLMandtransformsittoframe- the generated video cannot be arbitrarily long because of the
+level dynamic scene layout (DSL) information, which can be computational restrictions. A possible way to generate longer
+seen as a series of bounding boxes. To use this DSL informa- videosistotrainamulti-modalvideogenerationmodel,which
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 11
+AR Regularization forimagegenerationbecauseitisdifficulttodeterminewhich
+Text tokens Visual tokens AR Diffusion
+Diffusion Model Regularization Regularization visual token should be the first and which one should be the
+last. Therefore, a recent work [140] tries to use the next-
+Multi-modal AR Model Connector Multi-modal Transformers
+scalepredictionparadigmtogenerateimages,wherethelower-
+Text Visual Multi-modal LLM Multi-modal Input resolution images are regarded as previous tokens to predict
+Tokenizer Tokenizer Processor (next) higher-resolution images. Unfortunately, the scaling
+ability is still not verified in the multi-modal understanding
+Auto-Regressive(AR) Model Joint AR and Diffusion Model
+and generation, and the model achieves 1.73 FID score on the
+Fig. 9. Possible unified multi-modal understanding and generation frame- ImageNet [141] benchmark for generation, falling behind the
+workswithdifferentprobabilisticmodelingmethods. diffusion model [142] with 1.35 FID score.
+2) Joint Autoregressive and Diffusion Model: Considering
+theimpressivevisualgenerationabilityofthediffusionmodel,
+can receive the last frame or the last several frames of the
+amorenaturalwayforunifiedmulti-modalunderstandingand
+previous video as input, and also the text prompt as input, to
+generationistocombinetheautoregressiveanddiffusionmod-
+generate the next video clip.
+els. In Fig. 9, we present two kinds of possible frameworks.
+The first one is that we have a pretrained diffusion model
+IV. UNIFICATIONOFUNDERSTANDINGANDGENERATION
+forvisualgenerationandamulti-modalLLMformulti-modal
+Till now, we have discussed both the multi-modal LLMs
+understanding. Then we connect these two parts and can
+andthemulti-modaldiffusionmodels,wheretheformerworks
+obtainaunifiedmodel.Abouthowtoconnectthesetwoparts,
+well for multi-modal understanding and the latter exhibits
+many existing works [143]–[145] directly use the LLM as
+powerful ability in visual generation. Then there arises a
+the controller, and the diffusion model as a tool for visual
+natural question, could we have a unified model that can
+generation, which is a common paradigm in tool learning.
+simultaneously work well for multi-modal understanding and
+Although works like tool learning can enable the models
+generation? Next, we will discuss this trending problem from
+with visual generation abilities, they easily suffer generation
+the following two perspectives: (i) the probabilistic modeling
+failure when meeting multi-modal generation conditions. For
+method, and (ii) the model architecture.
+example,whenwewanttogenerate“aspecificgirl(described
+with a given image) and a specific dog (described with a
+A. Probabilistic Modeling: Autoregressive or Diffusion? given image) playing on the grass”, the tools available are
+The success of multi-modal large-language models has only SOTA text-to-image models. They will fail to guarantee
+clearly shown the great power of autoregressive modeling for the specific girl and dog occur in the generated image. In
+multi-modal understanding and text generation, so we believe fact, there are many conditions that can not be described with
+the autoregressive method should be included. Then, the next only text, and this kind of tool-learning method will fail.
+question is how we enable the model with visual generation To tackle the problem, a more advanced way is to train a
+ability. Based on existing works in Sec. II and Sec. III, we learnable connector [146]–[150], which aligns the diffusion
+provide the possible methods in Fig. 9, where we present the modelandthemulti-modalLLMinthesamespace,similarto
+autoregressivemodelandthejointautoregressiveanddiffusion thetrainingparadigmofthealignmentmoduleinmulti-modal
+model. Next, we will elaborate on them in detail. LLM. The alignment process enables the diffusion model to
+1) Autoregressive (AR) Model: Although diffusion models receivetheLLMoutputmulti-modalembeddingsasconditions
+have become dominant in visual generation, there are still instead of pure text descriptions, thus achieving multi-modal
+some recent attempts [3], [44], [136]–[139] on generating generation. However, this paradigm inherits the limitations
+visual content in an autoregressive manner. These works of alignment architecture. The multi-modal LLM and the
+will first try to map the input images and text into discrete diffusionmodelarepretrainedrespectively,theperformanceof
+tokens respectively. Particularly, the images are discretized theunifiedmodelwillbelimitedbyeachmodel.Additionally,
+withvisualtokenizerssuchasVQGANorVQ-VAE.Thenthe from an intuitive perspective, multi-modal understanding and
+mixed text and visual tokens will be fed into a multi-modal multi-modal generation should not be independent tasks, but
+autoregressive model. After that, the model will output the two related tasks that could share knowledge. For example,
+mixed text and visual tokens. Also, some special tokens such when generating a picture of a girl riding a horse, the model
+as<soi>,<eoi>areusedtoindicatethestartoftheimage should definitely understand the concepts “girl”, “horse” and
+tokens and the end of the image tokens. Then the generated “riding”.Therefore,althoughitisresource-friendlytoobtaina
+text tokens will deliver how the model understands the input unified multi-modal understanding and generation framework
+multi-modal information, and the visual tokens will be sent through connecting pretrained models, its ability is limited by
+to the decoder of the VQ-VAE or VQGAN to reconstruct independent modeling.
+images. Therefore, the autoregressive model can be used for The second possible model is a unified multi-modal-
+both understanding and visual generation. transformer framework as shown in Fig. 9, where we do
+Remark. Despite these efforts, the autoregressive method is not rely on two pretrained models, but try to use a single
+far from perfect — it basically assumes the existence of a model trained with both diffusion and autoregressive regular-
+causal structure and causal attention, where previous tokens izations. The multi-modal input processor will first transform
+are used to predict next tokens. However, this is not suitable the multi-modal data into sequences that can be received by
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 12
+the transformers. Then the multi-modal transformer will try Text Visual
+Tokens Tokens
+to learn the multi-modal knowledge for both understanding
+and generation. The diffusion regularization is used to guide
+visual generation and the autoregressive regularization is used Text Tokenizer Visual Encoder
+to guide the text generation. Note that this is a transformer-
+like model but not necessarily an LLM. This is because Text Image
+when using transformers to generate visual content, the full- (a) Single-Visual Encoder
+attention mechanism is usually adopted. In contrast, the atten-
+tionmechanismadoptedbyLLMiscausalanduni-directional. Text Visual Visual
+Tokens Semantic Tokens Pixel Tokens
+Therefore, an adaptive or mixed attention mechanism might
+be designed. This perspective is verified in TransFusion [151] Visual Visual
+and Show-o [152]. The difference between Transfusion and Text Tokenizer Semantic Pixel
+Encoder Encoder
+Show-omainlyliesinthediffusionmodel,whereTransFusion
+adopted continuous diffusion that is similar to current visual Text Image
+diffusion models, but Show-o adopted masked generative (b) Semantic-Pixel Visual Encoders
+modeling [153] which could be regarded as discrete diffusion
+Fig.10. Possibleframeworksofthemulti-modalinputprocessorforunified
+regularization. Therefore, Show-o still relies on a pixel-level multi-modalunderstandingandgenerationmodels.
+visual tokenizer for image generation but might trade off
+some understanding ability. Additionally, these two works are
+primary attempts at combining autoregressive and diffusion activated. Janus-pro [154] and BAGEL [155] adopt this ar-
+modeling methods in a single transformer-like model. There chitecture and outperform existing unified works. Moreover,
+still exist several open problems regarding what the model it is a more flexible way to conduct some adaptive token
+architecture should be like, such as the multi-modal input selection from the semantic and pixel tokens for fine-grained
+processororthetransformer-likemodel,whichwewilldiscuss understanding. We believe this would result in interesting
+next. research work.
+2) Multi-modal Transformer: After discussing how to
+tackle the multi-modal input information, the next key com-
+B. Model Architecture
+ponent is the multi-modal transformer, which captures the
+Comparedtopreviousmulti-modalLLMorDiffusionmod- complex relations among and within modalities. As shown
+els that only focus on one task, i.e., generation or understand- in Fig. 11, on the left is a dense model, where one unified
+ing,theunifiedmodelitselfshouldsupportmultipleobjectives. transformer is used for both multi-modal understanding and
+When it comes to understanding, the model should have the generation [41], [156]. Considering that understanding and
+ability of conceptual abstraction and associative reasoning. generation might share some knowledge but their objectives
+In contrast, when it comes to visual generation, besides the are not exactly the same, it is a natural idea to utilize the
+overallconceptsandtheirrelations,pixel-leveldetailsarealso mixture of experts [157] in multi-task learning as shown in
+important. Therefore, the unified model architecture design (b). On the right of the figure, some of the experts share the
+mightbedifferentfromthatofprevioussingle-objectivemod- knowledgeofunderstandingandgeneration,e.g.,conceptsand
+els. Next, we mainly discuss the possible architectures of the their relations, some of the experts are good at the visual
+multi-modalinputprocessorandthemulti-modaltransformers. details for visual generation, and other experts are good at
+1) Multi-modal input processor: To tackle the multi-modal reasoning for better understanding. LlamaFusion [158] and
+input text and images, two possible input processors are BAGEL[155]havemadepreliminaryexplorationsinthisarea,
+presented in Fig. 10. Text is consistently tackled by a text both using only two experts and employing hard routing. In
+tokenizer. However, there are some differences in the visual LlamaFusion,whichusesasinglevisualencoder,oneexpertis
+input. In Fig. 10(a), we show the visual processor adopted responsibleforprocessingtexttokens,whiletheotherhandles
+by most existing works, where a single visual encoder is visual tokens. In contrast, BAGEL, which adopts semantic-
+usedtoprocesstheimages.Consideringthatthevisualtokens pixelvisualencoders,assignsoneexperttoprocesstexttokens
+should support the pixel-level visual generation task, existing and visual semantic tokens, and the other to handle visual
+works [3], [151], [152] generally adopt the single pixel-level pixel tokens. Both works find that their architectures outper-
+(or patch-level) visual tokens. The pixel-level tokens bring form dense models, indicating that unified models still face
+challenges to the multi-modal transformer, requiring it not optimizationchallengesarisingfromtask-specificormodality-
+onlytocapturetherelationsbetweenimagepatchesforvisual specific learning objectives.
+generation but also to visual abstract reasoning ability for Inthissection,weprovideadiscussionoftheunifiedmodel
+understanding. In contrast, a possible alternative multi-modal of multi-modal generation and multi-modal understanding,
+inputprocessorispresentedinFig.10(b).Foreachimage,we from both the probabilistic modeling methods and the model
+respectively use a semantic encoder and a pixel-level encoder architectures. The discussed techniques can also be combined
+to obtain both semantic and pixel tokens. For the generation witheachotherandresultinmorearchitectures,andnowthere
+objective, the visual-pixel tokens are used. While optimizing are few attempts at the unified model design and we believe
+the understanding objective, the visual semantic tokens are the discussion above will inspire a lot of future works.
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 13
+TABLEI
+OVERVIEWOFMULTI-MODALLLM,DIFFUSION,ANDUNIFIEDMODELSINTHISPAPER.
+Model Type Classification Publication Year
+Multi-modalLLM(MLLM)
+LLaVA[4] ImageLLM Alignment NeurIPS 2024
+BLIP-2[24] ImageLLM Alignment ICML 2023
+MiniGPT-4[30] ImageLLM Alignment ICLR 2024
+Qwen-VL[159] ImageLLM Alignment ArXiv 2023
+Flamingo[29] ImageLLM Alignment NeurIPS 2025
+Fuyu[33] ImageLLM Early-Fusion - 2023
+Gemini[25] ImageLLM Early-Fusion ArXiv 2023
+VideoChat[48] VideoLLM Alignment ArXiv 2023
+VideoLLaMA[49] VideoLLM Alignment EMNLP 2023
+Video-ChatGPT[50] VideoLLM Alignment ACL 2023
+VideoLLaMA2[51] VideoLLM Alignment ArXiv 2024
+LLaVA-OneVision[15] VideoLLM Alignment TMLR 2024
+MiniCPM-V[160] VideoLLM Alignment ArXiv 2024
+VILA-1.5[161] VideoLLM Alignment ArXiv 2023
+DiffusionModel
+GLIDE[72] Text-to-Image Pixel-Based ICML 2022
+Imagen[73] Text-to-Image Pixel-Based NeurIPS 2022
+StableDiffusion[74] Text-to-Image Latent-Based CVPR 2022
+DALL-E2[75] Text-to-Image Latent-Based ArXiv 2022
+DiT[78] Text-to-Image Latent-Based ICCV 2023
+PixArt-α[79] Text-to-Image Latent-Based ICLR 2025
+Text2Video-Zero[103] Text-to-Video Latent-Based ICCV 2023
+Latent-Shift[104] Text-to-Video Latent-Based ArXiv 2023
+VDM[105] Text-to-Video Latent-Based NeurIPS 2022
+Make-a-video[106] Text-to-Video Latent-Based ICLR 2024
+AnimateDiff[107] Text-to-Video Latent-Based ICLR 2024
+Latte[108] Text-to-Video Latent-Based TMLR 2025
+CogVideo[162] Text-to-Video Latent-Based ICLR 2023
+Vidu[133] Text-to-Video Latent-Based ArXiv 2024
+UnifiedModel
+VL-GPT[136] UnifiedModel Autoregressive ArXiv 2023
+Chameleon[3] UnifiedModel Autoregressive ArXiv 2024
+Emu3[44] UnifiedModel Autoregressive ArXiv 2024
+LlamaGen[137] UnifiedModel Autoregressive ArXiv 2024
+AnyGPT[138] UnifiedModel Autoregressive ACL 2024
+Janus [139] UnifiedModel Autoregressive CVPR 2025
+Janus-Pro [154] UnifiedModel Autoregressive ArXiv 2025
+VisualGPT[143] UnifiedModel JointAR-Diffusion ArXiv 2023
+HuggingGPT[144] UnifiedModel JointAR-Diffusion NeurIPS 2024
+MLLM-Tool[145] UnifiedModel JointAR-Diffusion WACV 2025
+Emu2[146] UnifiedModel JointAR-Diffusion CVPR 2024
+Kosmos-G[147] UnifiedModel JointAR-Diffusion ICLR 2024
+CoDi-2[148] UnifiedModel JointAR-Diffusion CVPR 2024
+Seed-X[149] UnifiedModel JointAR-Diffusion ArXiv 2024
+MetaQuery[163] UnifiedModel JointAR-Diffusion ArXiv 2025
+BLIP3-o[150] UnifiedModel JointAR-Diffusion ArXiv 2025
+TransFusion[151] UnifiedModel JointAR-Diffusion ICLR 2025
+Show-o[152] UnifiedModel JointAR-Diffusion ICLR 2025
+LlamaFusion[158] UnifiedModel JointAR-Diffusion Arxiv 2024
+BAGEL[155] UnifiedModel JointAR-Diffusion Arxiv 2025
+are also important to implement multi-modal generative AI
+Multimodal Multimodal Multimodal [164]. In this section, we will review the literature on the
+Multimodal Transformer Expert 1 Expert 2 Expert 3
+datasetsfortrainingmulti-modalgenerativeAImodels.Based
+on the differences in data types, we divide the datasets
+into three categories: caption, conversation, and reasoning. In
+Multi-modal Tokens Multi-modal Tokens addition, many multi-modal large foundation models choose
+(a) Dense Model (b) Mixture of Experts to collect the aforementioned types of data for integration
+and construct their own datasets. Therefore, we denote these
+Fig.11. Possiblearchitecturesofthemulti-modaltransformer.
+datasets as the integration datasets.
+V. DATASETS A. Caption Datasets
+After discussing the multi-modal understanding and gener- Thecaptiondatasetaimstoimprovebasicvisualandtempo-
+ation models, multi-modal text-image and text-video datasets raldescriptioncapabilitiesformulti-modalLLMsandprovide
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 14
+TABLEII
+COMMONDATASETS
+Dataset type Modalities Datasets
+Text-Image SBU Captions [165], MSCOCO [166], CC-3M [167], LAION [168], MINT-1T [169]
+Captions
+Text-Video WebVid [170], InternVid [171], HD-VG-130M [172], YouCook2 [173], TextVR [174]
+Text-Image VQAv2 [175], GQA [176], OK-VQA [177], AOK-VQA [178], OCR-VQA [179], TextVQA [180]
+Conversation
+Text-Video TGIF-QA [181], WebVidQA [182], EgoQA [183]
+Text-Image CLEVR [184], VisualMRC [185]
+Reasoning
+Text-Video NExT-QA [186], CLEVRER [187]
+Text-Image LLaVA-Instruct [28]
+Intergration
+Text-Video&Image Video-LLaVA [156], VideoChat2 [188], VideoLLaMa2 [51]
+the mapping relationship for text-to-image and text-to-video (CLEVR [184]), reading comprehension (VisualMRC [185]),
+models. Commonly used text-to-image datasets include SBU temporal reasoning (NExT-QA [186]), and spatiotemporal
+Captions [165], MSCOCO [166], Conceptual Captions (CC- reasoning (CLEVRER [187]).
+3M)[167],andLAION[168].Thesizeofthesedatasetsranges
+from 328K to 5B. Recently MINT-1T is proposed comprising
+D. Integration Datasets
+one trillion text tokens and three billion images [169], a 10x
+Due to the strong generalization ability of multi-modal
+scale-up from existing open-source datasets and it includes
+LLMs,theirtrainingdataisnotlimitedtoonlyonesingletask
+previously untapped sources such as PDFs and ArXiv papers.
+such as caption, conversation, or reasoning, instead requiring
+Text-to-videodatasetsincludeWebVid[170],InternVid[171],
+comprehensivepretrainingforbothsimpleandcomplexvisual
+HD-VG-130M [172], YouCook2 [173], and TextVR [174].
+modal tasks. Therefore, many multi-modal large model works
+The caption datasets mainly serve in the following two as-
+oftendonotuseasinglevisualtaskdataset,insteadtheyselect
+pects,i.e.,(i)provideknowledgeforthetrainingofgeneration
+subsets of several datasets from each category mentioned
+models to generate images or videos based on the input text
+above for integration and adjustment, forming instruction
+embedding and (ii) use text-image datasets to align the image
+training data that employs both image and video data for
+modality with the multi-modal LLM for understanding visual
+different visual modal tasks. For visual instruction tuning,
+inputs.
+LLaVA [28] is the first multi-modal LLM which i) leverages
+text-only GPT-4 [189] to expand the existing bounding box,
+B. Conversation Datasets
+and ii) employs caption dataset (e.g., MSCOCO [166]) as
+The conversation dataset aims at enhancing multi-modal multi-modal instruction tuning data. In addition, Liu et al.
+LLMs’ capabilities for single-turn and multi-turn conversa- proposeLLaVA-Instruct,whichisbuiltonasubsetoftheCC-
+tions when asking questions about the input image or video. 3M dataset and contains 58k in conversations, 23k in detailed
+Normally a diverse set of questions would be asked about the descriptions, as well as 77k in complex reasoning records.
+visualcontentoftheimageandthevideo,includingtheobject Following the development of visual instruction tuning, many
+types, counting the objects, objects actions, objects locations, video LLMs such as Video-LLaVA [156], VideoChat2 [188]
+event moment, event duration, and relative positions between and VideoLLaMa2 [51] are proposed, utilizing the combina-
+objects. With simple formatting reorganization, many visual tion of caption, conversation, and reasoning datasets under
+QA datasets could be directly constructed as conversation both text-image and text-video modalities.
+datasets for multi-modal LLM training. These include basic
+VQA (VQAv2 [175], GQA [176]), knowledge-based VQA
+VI. FUTUREDIRECTIONS
+(OK-VQA[177],AOK-VQA[178]),OCR-basedVQA(OCR-
+VQA [179], TextVQA [180]) and VideoQA (TGIF-QA [181], Lastbutnotleast,weexplorechallengingproblemsdeserv-
+WebVidQA [182], and egocentric VQA from Ego4D [183]), ing further investigation and share our insights on promising
+which can not only improve the visual QA capabilities for future directions for multi-modal generative AI.
+multi-modal LLMs in conversations but also help the models
+to learn more visual and temporal knowledge. A. Unified Model for Video Understanding and Generation
+In Section IV, we primarily discuss the unified models for
+C. Reasoning Datasets
+image understanding and generation. Given the large amount
+The above two types of datasets mainly focus on the of video data in the wild, we believe there will be an urging
+visual content itself, normally lacking in-depth reasoning need to extend the unification to videos. Among the three
+questions. Meanwhile, the reasoning datasets focus on en- architectures introduced in Fig. 9, bridging the multi-modal
+hancing multi-modal LLMs for diverse reasoning capacities, LLM and video diffusion model with a connector [190],
+which normally require a step-by-step reasoning process by [191] can be achieved in a way similar to images. However,
+following rigorous logic. These include spatial reasoning adaptingtheothertwoarchitecturestovideosfacessignificant
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 15
+challenges due to i) the increased computational demands entities, being capable of modeling both naturally occurring
+caused by longer sequences as well as ii) the difficulty in structuralinstances,e.g.,proteinandmolecularstructures,and
+learning spatiotemporal cues. For instance, in an autoregres- the relations between entities across diverse modalities, e.g.,
+sivemodel,encodingindividualvideoframesseparatelyusing multi-modal knowledge graphs. Therefore, we introduce the
+a 2D visual tokenizer fails to capture the essential temporal concept of Multi-modal Graph Generative AI as a future
+motion information. VideoPoet [192], which employs a 3D research direction, where 1) multi-modal information can be
+video tokenizer [193], encodes a 17-frame video (spanning utilizedforgraphgenerationand2)structuralrelationscanbe
+2.125seconds)into1280tokens,limitingitsabilitytogenerate used to facilitate multi-modal content generation.
+longervideos.VideoLaViT[194]introducesanefficientvideo 1) Leveraging multi-modal information for graph gener-
+representation model by decomposing videos into keyframes ation: Current multi-modal research predominantly focuses
+andtemporal motions, trainingseparatetokenizers foreachof on modalities with regular structures with fixed degrees of
+them, which significantly improves computational efficiency. freedom, e.g., texts (sequences) and images (grids). How-
+However,thetrainingcostisstilltoohighwhenscalingtothe ever, many real-world scenarios containing various modalities
+largeamountofweb-scalevideodata.Similarly,usingasingle exhibit highly irregular structures with arbitrary degrees of
+model trained with both diffusion and autoregressive regular- freedom,e.g.,proteinstructures[197],moleculargraphs[198],
+izations also encounters the same challenges, where modeling scene graphs [199] etc. Accurately understanding and gener-
+complex relations such as causal attention and spatiotemporal ating graphs across these modalities is an important direction
+attention within the model remains unexplored. Therefore, it for future research. For instance, Yao et al. [200] explore
+deserves more efforts in advancing unified generative AI for text-to-graph generation by leveraging the domain knowledge
+video understanding and generation. of LLMs, and Liu et al. [201] explore text-to-molecular
+graph generation by integrating the graph, image, and text
+information. However, there are several challenges for multi-
+B. Benchmark for the Unification
+modal graph generation: i) Understanding Structures. Given
+Ontheonehand,despitesomepioneeringworkonstudying the high degree of irregularity in graphs, aligning them with
+unified models [151], [152] for understanding and generation, various modalities poses significant difficulties. ii) Generating
+the corresponding evaluations are conducted separately in a Structures. While mainstream approaches utilize autoregres-
+non-unified way. For instance, existing works use specific sivemethodsforgeneratingdiscretesequenceinformationand
+benchmarks for understanding tasks, such as Flickr30k [195] employdiffusionmodelsforgeneratingcontinuousgridinfor-
+and VQAv2 [175], while relying on different benchmarks for mation,thecomplexityofgraphstructurestendstonecessitate
+generationtasks,suchasMSCOCO[166]andGenEval[196]. new techniques for multi-modal graph generation.
+On the other hand, a unification benchmark offers the ad- 2) Leveraging structural relations to facilitate multi-modal
+vantage of unified metrics and rankings, providing a more contentgeneration: Traditionalmulti-modallearningmethod-
+comprehensive and fair assessment of model performance ologiesoftenassumethatdatafromdifferentmodalitiesarein-
+across both tasks. However, designing such a benchmark is dependent, whereas there can be strong intrinsic relationships
+challenging, as it requires a vast amount of visual data with across modalities in the real world [202], [203]. For example,
+human annotations in various forms, including labels, rank- the descriptions, chirps, and images of birds are more closely
+ings, and natural language descriptions. More importantly, the related to each other than those of other species such as dogs
+evaluationshouldideallyreflectthemutualpromotionbetween and fish. Leveraging graph structure to capture these multi-
+understanding and generation. In summary, the challenges for modal associations may help to understand and generate new
+creating a unification benchmark are threefold, content. Ektefaie et al. [204] explore the combination of mul-
+1) Dataset construction. The visual data should be rep- tiple data modalities via cross-modal dependencies and geo-
+resentative, diverse, and abundant, with high-quality metricrelationshipstodevelopmulti-modalarchitectures,e.g.,
+annotations for multiple tasks. image-intensive, knowledge-grounded, and language-intensive
+2) Ranking criteria. Models should be ranked based on models, in order to process diverse datasets. Yoon et al. [205]
+a combination of understanding and generation metrics, capture intricate relationships between multiple modalities
+ensuring a balanced evaluation of both capabilities. through graphs to enhance pretrained language models with
+3) Mutual promotion. The benchmark should include multi-modalcontextforgenerativetasks.Nevertheless,several
+datasets or tasks that effectively demonstrate how un- challengesremain:i)Thefeaturespacesofdifferentmodalities
+derstanding and generation enhance each other. are heterogeneous, thus aligning them in a unified space
+Thisbeingthecase,developingsuchabenchmarkiscrucial via a multi-modal graph poses significant challenges. ii) The
+forpushingforwardtheresearchonunificationofunderstand- connections across instances from different modalities can be
+ing and generation, making it a promising area for future heterophilous, e.g., the meow of black and white cats may be
+investigation. very similar, but their visual appearances differ significantly,
+leading to varying degrees of weights regarding similarity
+for the connections across modalities within the multi-modal
+C. Multi-modal Graph Generative AI
+graph. iii) There may be substantial biases among different
+Graph serves as a powerful and versatile data structure modalities, e.g., textual and visual modalities may dominate
+used to model flexible relationships and connections between the learning process due to the ease of collecting texts and
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 16
+imagesviatheInternet,whileothermodalitiessuchasacoustic 2) Lightweight multi-modal LLMs [221], such as vi-
+perceptionandtactilesensearemuchmoredifficulttocollect. sion token compression [156], [222] and efficient structures
+Multi-modal graph generative AI holds significant poten- (e.g., MoE [223] and Mamba [224]), have been explored in
+tial applications: generating molecular graphs from texts can quite a few studies. However, classic powerful compression
+facilitate scientists in rapidly creating and editing chemical methods (e.g., quantization and pruning) are largely unex-
+compounds with desired properties through natural language plored for multi-modal LLM. Both diffusion models [214]
+interactions, thereby accelerating the drug discovery process. andLLMs[225]havegainedsuccessfulcompressionratesvia
+Additionally,leveragingmulti-modalgraphsallowsgenerative the utilization of quantization and pruning, giving us much
+AI systems to reference entities associated with different confidence in exploring these methods for multi-modal LLMs
+modalities, thereby enhancing their ability to make cross- in future research.
+modal associations. Therefore, we encourage efforts in pro- 3) Lightweight unified modelformulti-modalunderstand-
+moting future research in multi-modal graph generative AI. ingandgenerationhasbeenlargelyignoredinliterature.How-
+ever, given that the unified models typically have numerous
+parameters, there will be a huge need for the corresponding
+D. Lightweight Multi-modal Generative AI
+lightweightversions.Assuch,developingeffectivelightweight
+We define Lightweight Multi-modal Generative AI as modelsfortheunificationofunderstandingandgenerationwill
+the family of efficient Artificial Intelligence models capable be a frontier research direction with no doubt.
+of generating diverse types of data including texts, images,
+audios,etc.,whilebeingoptimizedforlowcomputationalcost,
+E. Multi-modal Generative AI in Dynamic Environment
+fast inference, and deployment on edge devices, e.g., smart-
+The multi-modal generative models discussed so far in this
+phones, IoT devices. Lightweight Multi-modal Generative AI
+papermostlydonotinteractwiththedynamicphysicalworld.
+has broad applications in various scenarios including mobile
+In the future, multi-modal generative AI agents are expected
+& edge AI, IoT & embedded systems, and fast prototyping
+to behave like humans, where they can i) perceive the multi-
+& low-cost deployment. We deem lightweight multi-modal
+modalenvironments,ii)conductreasoningandplanningbased
+generative AI as another promising future research direction
+on the perception and their current states, iii) take action to
+from the following three perspectives.
+interact with the environments, and iv) improve themselves
+1) Lightweight diffusion models face challenges from
+via feedbacks from the environments. A very related topic
+sampling steps, neural architectures, and tasks. The iterative
+is multi-modal embodied AI [226], [227], where multi-modal
+sampling process is a critical limitation of diffusion mod-
+LLMs are used as the controller. However, existing embodied
+els, bringing high computational cost and constraining real-
+AImethods areallparameter-fixedupon deployment,limiting
+time applications. Although substantial works (e.g., distilla-
+their abilities of self-improvement in dynamic environments,
+tion [206], consistency model [207], [208] and flow match-
+where new concepts may arise in the course of time. The new
+ing [209], [210]) engage in few-steps (e.g., 4 steps) or single-
+conceptsmaycausetheOut-of-Distribution(OOD)challenges
+step sampling, fewer-steps sampling in general may cause
+for the pretrained multi-modal generative models, which fail
+remarkable quality degradation. Tasks that require high qual-
+to take the right action under these new concepts. Therefore,
+ity[211],[212]stilladoptmulti-stepsampling.Thusitisvery
+future works need to deal with the problem of i) when to
+importanttoimprovefew-stepsamplinginfutureinvestigation.
+update the model parameters, and ii) which part of the model
+Besides,themassivenetworkarchitecturesofdiffusionmodels
+parameters should be updated [228], e.g., the vision or the
+alsocontributetotheissueofhighcomputationalcosts,which
+language modules.
+tends to be even more severe as the model size increases
+rapidly. Previous methods try to obtain lightweight architec-
+tures via compression techniques such as quantization [213]–
+VII. CONCLUSION
+[215], pruning [216], feature cache [217], [218], and neural Inthispaper,wethoroughlydiscussmulti-modalgenerative
+architecture search [219], [220] etc. Although these works AI, with a particular focus on multi-modal LLMs, multi-
+have achieved remarkable success, their designs are mostly modal diffusion models, as well as the unifications of LLMs
+tailored for the setting of multi-step sampling, either being and diffusions for multi-modal understanding and generation.
+not applicable or suffering from poor performances in few- We comprehensively overview two well-documented multi-
+steps sampling. Therefore, exploring sampling-steps-agnostic modal generative AI paradigms, i.e., multi-modal LLMs for
+compression methods is an important future direction as well. multi-modal understanding and diffusion models for visual
+Moreover, traditional compression methods mainly focus on generation. We deeply analyze the underlying mathematical
+UNet-based models. Existing literature [78], [81] indicates principles, fundamental architecture designs, and practical ap-
+that DiT [78] may be a better architecture, resulting in the plicationscenarios,indicatinghowthesemodelscancontribute
+fact that more attention will be paid to DiT-based architec- to different aspects of multi-modal generative AI. We further
+tures. Moreover, previous compression methods mainly focus presentthenecessitiesfortheunificationofunderstandingand
+on class-condition or text-to-image generation tasks, rarely generation,exploringthetheoreticalpossibilitiesandpotential
+engaging in other challenging tasks such as video generation. designs towards building unified models that jointly support
+Exploring effective compression methods for these tasks will understanding and generation. The unification may come
+be meaningful as well. across challenges such as trade-offs between autoregressive
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 17
+and diffusion modeling, as well as different choices between [30] D. Zhu et al., “Minigpt-4: Enhancing vision-language under-
+dense and MoE architectures. Beyond summarizing existing standing with advanced large language models,” arXiv preprint
+arXiv:2304.10592,2023.
+methods, we also highlight promising future directions and
+[31] J.Chaetal.,“Honeybee:Locality-enhancedprojectorformultimodal
+identify the corresponding key challenges. We believe that llm,”inCVPR,2024,pp.13817–13827.
+the discussions together with insights provided in this paper [32] W. Li et al., “Tokenpacker: Efficient visual projector for multimodal
+llm,”arXivpreprintarXiv:2407.02392,2024.
+will serve as a foundation for future research and foster the
+[33] A. AI, “Fuyu-8b: A unified multimodal agent for image and text
+development of more powerful, efficient, and generalizable understanding,”https://www.adept.ai/blog/fuyu-8b,2023.
+multi-modal generative AI. [34] P.Jinetal.,“Chat-univi:Unifiedvisualrepresentationempowerslarge
+languagemodelswithimageandvideounderstanding,”inCVPR,2024,
+REFERENCES pp.13700–13710.
+[35] J. He et al., “Multi-modal instruction tuned llms with fine-grained
+[1] J. Achiam et al., “Gpt-4 technical report,” arXiv preprint visualperception,”inCVPR,2024,pp.13980–13990.
+arXiv:2303.08774,2023. [36] T.Zhangetal.,“Omg-llava:Bridgingimage-level,object-level,pixel-
+[2] T. Brooks et al., “Video generation models as world levelreasoningandunderstanding,”arXivpreprintarXiv:2406.19389,
+simulators,” 2024. [Online]. Available: https://openai.com/research/ 2024.
+video-generation-models-as-world-simulators [37] W. Wang et al., “Visionllm: Large language model is also an open-
+[3] C.Team,“Chameleon:Mixed-modalearly-fusionfoundationmodels,” endeddecoderforvision-centrictasks,”NeurIPS,vol.36,2024.
+arXivpreprintarXiv:2405.09818,2024. [38] H.Feietal.,“Vitron:Aunifiedpixel-levelvisionllmforunderstanding,
+[4] H.Liuetal.,“Visualinstructiontuning,”NeurIPS,vol.36,2024. generating,segmenting,editing,”2024.
+[5] Z. Liang et al., “A survey of multimodel large language models,” in [39] H. Liu et al., “A survey on hallucination in large vision-language
+Proceedingsofthe3rdInternationalConferenceonComputer,Artificial models,”arXivpreprintarXiv:2402.00253,2024.
+IntelligenceandControlEngineering,2024,pp.405–409. [40] H. You et al., “Ferret: Refer and ground anything anywhere at any
+[6] J.Wuetal.,“Multimodallargelanguagemodels:Asurvey,”in2023 granularity,”arXivpreprintarXiv:2310.07704,2023.
+IEEEInternationalConferenceonBigData(BigData). IEEE,2023, [41] Z. Chen et al., “Internvl: Scaling up vision foundation models and
+pp.2247–2256. aligning for generic visual-linguistic tasks,” in CVPR, 2024, pp.
+[7] D. Caffagni et al., “The revolution of multimodal large language 24185–24198.
+models:asurvey,”arXivpreprintarXiv:2402.12451,2024. [42] C. Jiang et al., “Hallucination augmented contrastive learning for
+[8] F.-A. Croitoru et al., “Diffusion models in vision: A survey,” IEEE multimodallargelanguagemodel,”inCVPR,2024,pp.27036–27046.
+Transactions on Pattern Analysis and Machine Intelligence, vol. 45, [43] N. Stiennon et al., “Learning to summarize with human feedback,”
+no.9,pp.10850–10869,2023. NeurIPS,vol.33,pp.3008–3021,2020.
+[9] L.Yangetal.,“Diffusionmodels:Acomprehensivesurveyofmethods [44] X.Wangetal.,“Emu3:Next-tokenpredictionisallyouneed,”arXiv
+andapplications,”ACMComputingSurveys,vol.56,no.4,pp.1–39, preprintarXiv:2409.18869,2024.
+2023. [45] Y. Goyal et al., “Making the v in vqa matter: Elevating the role of
+[10] H. Cao et al., “A survey on generative diffusion models,” IEEE image understanding in visual question answering,” in CVPR, 2017,
+TransactionsonKnowledgeandDataEngineering,2024. pp.6904–6913.
+[11] X. Zhang et al., “Unified multimodal understanding and genera- [46] Y. Liu et al., “Mmbench: Is your multi-modal model an all-around
+tionmodels:Advances,challenges,andopportunities,”arXivpreprint player?”inECCV. Springer,2024,pp.216–233.
+arXiv:2505.02567,2025. [47] Y. Tang et al., “Video understanding with large language models: A
+[12] S. Xie et al., “Towards unifying understanding and generation in the survey,”arXivpreprintarXiv:2312.17432,2023.
+era of vision foundation models: A survey from the autoregression [48] L. KunChang et al., “Videochat: Chat-centric video understanding,”
+perspective,”arXivpreprintarXiv:2410.22217,2024. arXivpreprintarXiv:2305.06355,2023.
+[13] A. Vaswani, “Attention is all you need,” arXiv preprint [49] H. Zhang et al., “Video-llama: An instruction-tuned audio-
+arXiv:1706.03762,2017. visual language model for video understanding,” arXiv
+[14] B. Huang et al., “Vtimellm: Empower llm to grasp video moments,” preprint arXiv:2306.02858, 2023. [Online]. Available: https:
+inCVPR,2024,pp.14271–14280. //arxiv.org/abs/2306.02858
+[15] B.Lietal.,“Llava-onevision:Easyvisualtasktransfer,”arXivpreprint [50] S. K. Muhammad Maaz, Hanoona Rasheed et al., “Video-chatgpt:
+arXiv:2408.03326,2024. Towards detailed video understanding via large vision and language
+[16] A. Radford et al., “Learning transferable visual models from natural models,”ArXiv2306.05424,2023.
+languagesupervision,”inICML,2021,pp.8748–8763. [51] Z. Cheng et al., “Videollama 2: Advancing spatial-temporal
+[17] A.Dosovitskiyetal.,“Animageisworth16x16words:Transformers modeling and audio understanding in video-llms,” arXiv preprint
+forimagerecognitionatscale,”arXivpreprintarXiv:2010.11929,2020. arXiv:2406.07476, 2024. [Online]. Available: https://arxiv.org/abs/
+[18] K.Heetal.,“Deepresiduallearningforimagerecognition,”inCVPR, 2406.07476
+2016,pp.770–778. [52] S. Bai et al., “Qwen2. 5-vl technical report,” arXiv preprint
+[19] A.Razavietal.,“Generatingdiversehigh-fidelityimageswithvq-vae- arXiv:2502.13923,2025.
+2,”NeurIPS,vol.32,2019. [53] J. Zhu et al., “Internvl3: Exploring advanced training and test-
+[20] W. Yan et al., “Videogpt: Video generation using vq-vae and trans- time recipes for open-source multimodal models,” arXiv preprint
+formers,”arXivpreprintarXiv:2104.10157,2021. arXiv:2504.10479,2025.
+[21] P.Esseretal.,“Tamingtransformersforhigh-resolutionimagesynthe- [54] H.Chenetal.,“Grounding-prompter:Promptingllmwithmultimodal
+sis,”inCVPR,2021,pp.12873–12883. information for temporal sentence grounding in long videos,” arXiv
+[22] J.Yuetal.,“Vector-quantizedimagemodelingwithimprovedvqgan,” preprintarXiv:2312.17117,2023.
+arXivpreprintarXiv:2110.04627,2021. [55] W.Fengetal.,“Llm4vg:Largelanguagemodelsevaluationforvideo
+[23] R. Rombach et al., “High-resolution image synthesis with latent grounding,”arXivpreprintarXiv:2312.14206,2023.
+diffusionmodels,”inCVPR,2022,pp.10684–10695. [56] E. Song et al., “Moviechat: From dense token to sparse memory for
+[24] J. Li et al., “Blip-2: Bootstrapping language-image pre-training with longvideounderstanding,”inCVPR,2024,pp.18221–18232.
+frozen image encoders and large language models,” arXiv preprint [57] H.Liuetal.,“Worldmodelonmillion-lengthvideoandlanguagewith
+arXiv:2301.12597,2023. blockwiseringattention,”arXivpreprintarXiv:2402.08268,2024.
+[25] G. Team et al., “Gemini: a family of highly capable multimodal [58] P.Zhangetal.,“Longcontexttransferfromlanguagetovision,”arXiv
+models,”arXivpreprintarXiv:2312.11805,2023. preprintarXiv:2406.16852,2024.
+[26] A. Brock et al., “High-performance large-scale image recognition [59] Y.Lietal.,“Llama-vid:Animageisworth2tokensinlargelanguage
+withoutnormalization,”inICML,2021,pp.1059–1071. models,”arXivpreprintarXiv:2311.17043,2023.
+[27] R.Girdharetal.,“Imagebind:Oneembeddingspacetobindthemall,” [60] Z. Wang et al., “Videotree: Adaptive tree-based video representation
+inCVPR,2023,pp.15180–15190. for llm reasoning on long videos,” arXiv preprint arXiv:2405.19209,
+[28] H.Liuetal.,“Visualinstructiontuning,”NeurIPS,vol.36,2024. 2024.
+[29] J.-B.Alayracetal.,“Flamingo:avisuallanguagemodelforfew-shot [61] I. J. Goodfellow et al., “Generative adversarial networks,” 2014.
+learning,”NeurIPS,vol.35,pp.23716–23736,2022. [Online].Available:https://arxiv.org/abs/1406.2661
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 18
+[62] J.Baoetal.,“Cvae-gan:fine-grainedimagegenerationthroughasym- [96] J. S. Smith et al., “Continual diffusion: Continual customization of
+metrictraining,”inICCV,2017,pp.2745–2754. text-to-imagediffusionwithc-lora,”arXivpreprintarXiv:2304.06027,
+[63] C.Vondricketal.,“Generatingvideoswithscenedynamics,”NeurIPS, 2023.
+vol.29,2016. [97] G. Sun et al., “Create your world: Lifelong text-to-image diffusion,”
+[64] D.P.Kingmaetal.,“Auto-encodingvariationalbayes,”inICLR,2014. IEEETransactionsonPatternAnalysisandMachineIntelligence,2024.
+[65] A. Van Den Oord et al., “Neural discrete representation learning,” [98] N.Kumarietal.,“Multi-conceptcustomizationoftext-to-imagediffu-
+NeurIPS,vol.30,2017. sion,”inCVPR,2023,pp.1931–1941.
+[66] J. Ho et al., “Denoising diffusion probabilistic models,” NeurIPS, [99] Z. Liu et al., “Cones 2: Customizable image synthesis with multiple
+vol.33,pp.6840–6851,2020. subjects,”inNeurIPS,2023,pp.57500–57519.
+[67] J. Song et al., “Denoising diffusion implicit models,” arXiv preprint [100] Y. Gu et al., “Mix-of-show: Decentralized low-rank adaptation for
+arXiv:2010.02502,2020. multi-concept customization of diffusion models,” NeurIPS, vol. 36,
+[68] S. Reed et al., “Generative adversarial text to image synthesis,” in 2024.
+ICML,2016,pp.1060–1069. [101] L. Wang et al., “Decompose and realign: Tackling condition
+[69] Y. He et al., “Localized text-to-image generation for free via cross misalignment in text-to-image diffusion models,” arXiv preprint
+attentioncontrol,”arXivpreprintarXiv:2306.14636,2023. arXiv:2306.14408,2023.
+[70] P.Isolaetal.,“Image-to-imagetranslationwithconditionaladversarial [102] Y.Wangetal.,“High-fidelityperson-centricsubject-to-imagesynthe-
+networks,”inCVPR,2017,pp.1125–1134. sis,”inCVPR,2024,pp.7675–7684.
+[71] C. Zhang et al., “Text-to-image diffusion models in generative ai: A [103] L.Khachatryanetal.,“Text2video-zero:Text-to-imagediffusionmod-
+survey,”arXivpreprintarXiv:2303.07909,2023. elsarezero-shotvideogenerators,”inICCV,2023,pp.15954–15964.
+[72] A. Nichol et al., “Glide: Towards photorealistic image genera- [104] J. An et al., “Latent-shift: Latent diffusion with temporal shift for
+tion and editing with text-guided diffusion models,” arXiv preprint efficient text-to-video generation,” arXiv preprint arXiv:2304.08477,
+arXiv:2112.10741,2021. 2023.
+[73] C. Saharia et al., “Photorealistic text-to-image diffusion models with [105] J. Ho et al., “Video diffusion models,” NeurIPS, vol. 35, pp. 8633–
+deep language understanding,” NeurIPS, vol. 35, pp. 36479–36494, 8646,2022.
+2022. [106] U.Singeretal.,“Make-a-video:Text-to-videogenerationwithouttext-
+[74] R. Rombach et al., “High-resolution image synthesis with latent videodata,”inICLR,2024.
+diffusionmodels,”inCVPR,2022,pp.10684–10695. [107] Y.Guoetal.,“Animatediff:Animateyourpersonalizedtext-to-image
+[75] A.Rameshetal.,“Hierarchicaltext-conditionalimagegenerationwith diffusionmodelswithoutspecifictuning,”inICLR,2024.
+cliplatents,”arXivpreprintarXiv:2204.06125,vol.1,no.2,p.3,2022. [108] X.Maetal.,“Latte:Latentdiffusiontransformerforvideogeneration,”
+[76] P. Dhariwal et al., “Diffusion models beat gans on image synthesis,” arXivpreprintarXiv:2401.03048,2024.
+NeurIPS,vol.34,pp.8780–8794,2021. [109] S.Chenetal.,“Gentron:Diffusiontransformersforimageandvideo
+[77] J. Ho et al., “Classifier-free diffusion guidance,” arXiv preprint generation,”inCVPR,2024,pp.6441–6451.
+arXiv:2207.12598,2022. [110] W. Wang et al., “Zero-shot video editing using off-the-shelf image
+[78] W. Peebles et al., “Scalable diffusion models with transformers,” in diffusionmodels,”arXivpreprintarXiv:2303.17599,2023.
+ICCV,2023,pp.4195–4205. [111] W. Chai et al., “Stablevideo: Text-driven consistency-aware diffusion
+[79] J. Chen et al., “Pixart-alpha: Fast training of diffusion trans- videoediting,”inICCV,2023,pp.23040–23050.
+former for photorealistic text-to-image synthesis,” arXiv preprint [112] S.Yangetal.,“Rerenderavideo:Zero-shottext-guidedvideo-to-video
+arXiv:2310.00426,2023. translation,”inSIGGRAPHAsia2023ConferencePapers,2023,pp.1–
+[80] C.Raffeletal.,“Exploringthelimitsoftransferlearningwithaunified 11.
+text-to-texttransformer,”Journalofmachinelearningresearch,vol.21, [113] C.Qietal.,“Fatezero:Fusingattentionsforzero-shottext-basedvideo
+no.140,pp.1–67,2020. editing,”inICCV,2023,pp.15932–15942.
+[81] P.Esseretal.,“Scalingrectifiedflowtransformersforhigh-resolution [114] L.Zhangetal.,“Addingconditionalcontroltotext-to-imagediffusion
+imagesynthesis,”inForty-firstICML,2024. models,”inICCV,2023,pp.3836–3847.
+[82] P. Cao et al., “Controllable generation with text-to-image diffusion [115] W.Chenetal.,“Control-a-video:Controllabletext-to-videogeneration
+models:Asurvey,”arXivpreprintarXiv:2403.04279,2024. withdiffusionmodels,”arXivpreprintarXiv:2305.13840,2023.
+[83] J. Shi et al., “Instantbooth: Personalized text-to-image generation [116] Z.Huetal.,“Videocontrolnet:Amotion-guidedvideo-to-videotrans-
+withouttest-timefinetuning,”inCVPR,2024,pp.8543–8552. lation framework by using diffusion model with controlnet,” arXiv
+[84] R.Galetal.,“Animageisworthoneword:Personalizingtext-to-image preprintarXiv:2307.14073,2023.
+generation using textual inversion,” arXiv preprint arXiv:2208.01618, [117] Y. Guo et al., “Sparsectrl: Adding sparse controls to text-to-video
+2022. diffusionmodels,”arXivpreprintarXiv:2311.16933,2023.
+[85] N. Ruiz et al., “Dreambooth: Fine tuning text-to-image diffusion [118] Y.Maetal.,“Followyourpose:Pose-guidedtext-to-videogeneration
+models for subject-driven generation,” in CVPR, 2023, pp. 22500– usingpose-freevideos,”inAAAI,vol.38,no.5,2024,pp.4117–4125.
+22510. [119] L. Hu, “Animate anyone: Consistent and controllable image-to-video
+[86] A.Hertzetal.,“Stylealignedimagegenerationviasharedattention,” synthesisforcharacteranimation,”inCVPR,2024,pp.8153–8163.
+inCVPR,2024,pp.4775–4785. [120] S. Hong et al., “Large language models are frame-level directors for
+[87] H. Chen et al., “Disenbooth: Identity-preserving disentangled tun- zero-shottext-to-videogeneration,”inFirstWorkshoponControllable
+ing for subject-driven text-to-image generation,” arXiv preprint VideoGeneration@ICML24,2023.
+arXiv:2305.03374,2023. [121] Y. Lu et al., “Flowzero: Zero-shot text-to-video synthesis with llm-
+[88] G.Xiaoetal.,“Fastcomposer:Tuning-freemulti-subjectimagegener- drivendynamicscenesyntax,”arXivpreprintarXiv:2311.15813,2023.
+ationwithlocalizedattention,”arXivpreprintarXiv:2305.10431,2023. [122] Z. Wang et al., “Motionctrl: A unified and flexible motion controller
+[89] D.Valevskietal.,“Face0:Instantaneouslyconditioningatext-to-image for video generation,” in ACM SIGGRAPH 2024 Conference Papers,
+modelonaface,”inSIGGRAPHAsia2023ConferencePapers,2023, 2024,pp.1–11.
+pp.1–10. [123] H. Chen et al., “Videodreamer: Customized multi-subject text-
+[90] J.Chengetal.,“Layoutdiffuse:Adaptingfoundationaldiffusionmod- to-video generation with disen-mix finetuning,” arXiv preprint
+elsforlayout-to-imagegeneration,”arXivpreprintarXiv:2302.08908, arXiv:2311.00990,2023.
+2023. [124] ——,“Disenstudio:Customizedmulti-subjecttext-to-videogeneration
+[91] G. Zheng et al., “Layoutdiffusion: Controllable diffusion model for with disentangled spatial control,” arXiv preprint arXiv:2405.12796,
+layout-to-imagegeneration,”inCVPR,2023,pp.22490–22499. 2024.
+[92] K. Sohn et al., “Styledrop: Text-to-image generation in any style,” [125] L.Lianetal.,“Llm-groundedvideodiffusionmodels,”inICLR,2024.
+arXivpreprintarXiv:2306.00983,2023. [126] H. He et al., “Cameractrl: Enabling camera control for text-to-video
+[93] D.-Y.Chenetal.,“Artadapter:Text-to-imagestyletransferusingmulti- generation,”arXivpreprintarXiv:2404.02101,2024.
+levelstyleencoderandexplicitadaptation,”inCVPR,2024,pp.8619– [127] J.Guetal.,“Kaleidodiffusion:Improvingconditionaldiffusionmodels
+8628. withautoregressivelatentmodeling,”arXivpreprintarXiv:2405.21048,
+[94] L.Huangetal.,“Composer:Creativeandcontrollableimagesynthesis 2024.
+withcomposableconditions,”arXivpreprintarXiv:2302.09778,2023. [128] R.Henscheletal.,“Streamingt2v:Consistent,dynamic,andextendable
+[95] L. Han et al., “Svdiff: Compact parameter space for diffusion fine- long video generation from text,” arXiv preprint arXiv:2403.14773,
+tuning,”inICCV,2023,pp.7323–7334. 2024.
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 19
+[129] W. Ren et al., “Consisti2v: Enhancing visual consistency for image- [164] W. Zhu et al., “Multimedia big data computing,” IEEE multimedia,
+to-videogeneration,”arXivpreprintarXiv:2402.04324,2024. vol.22,no.3,pp.96–c3,2015.
+[130] H.Qiuetal.,“Freenoise:Tuning-freelongervideodiffusionvianoise [165] V. Ordonez et al., “Im2text: Describing images using 1 million cap-
+rescheduling,”inICLR,2024. tionedphotographs,”NeurIPS,vol.24,2011.
+[131] A. Blattmann et al., “Stable video diffusion: Scaling latent video [166] T.-Y. Lin et al., “Microsoft coco: Common objects in context,” in
+diffusion models to large datasets,” arXiv preprint arXiv:2311.15127, ECCV. Springer,2014,pp.740–755.
+2023. [167] P.Sharmaetal.,“Conceptualcaptions:Acleaned,hypernymed,image
+[132] H.Chenetal.,“Videocrafter1:Opendiffusionmodelsforhigh-quality alt-textdatasetforautomaticimagecaptioning,”inProceedingsofthe
+videogeneration,”arXivpreprintarXiv:2310.19512,2023. 56thAnnualMeetingoftheAssociationforComputationalLinguistics
+[133] F. Bao et al., “Vidu: a highly consistent, dynamic and skilled (Volume1:LongPapers),2018,pp.2556–2565.
+text-to-video generator with diffusion models,” arXiv preprint [168] C. Schuhmann et al., “Laion-5b: An open large-scale dataset for
+arXiv:2405.04233,2024. training next generation image-text models,” NeurIPS, vol. 35, pp.
+[134] Z. Yang et al., “Cogvideox: Text-to-video diffusion models with an 25278–25294,2022.
+experttransformer,”arXivpreprintarXiv:2408.06072,2024. [169] A.Awadallaetal.,“Mint-1t:Scalingopen-sourcemultimodaldataby
+[135] “Kling.”[Online].Available:https://kling.kuaishou.com/ 10x: A multimodal dataset with one trillion tokens,” arXiv preprint
+[136] J. Zhu et al., “Vl-gpt: A generative pre-trained transformer for arXiv:2406.11271,2024.
+vision and language understanding and generation,” arXiv preprint [170] M.Bainetal.,“Frozenintime:Ajointvideoandimageencoderfor
+arXiv:2312.09251,2023. end-to-endretrieval,”inICCV,2021,pp.1728–1738.
+[137] P.Sunetal.,“Autoregressivemodelbeatsdiffusion:Llamaforscalable [171] Y.Wangetal.,“Internvid:Alarge-scalevideo-textdatasetformulti-
+imagegeneration,”arXivpreprintarXiv:2406.06525,2024. modalunderstandingandgeneration,”inTheTwelfthICLR.
+[138] J.Zhanetal.,“Anygpt:Unifiedmultimodalllmwithdiscretesequence [172] W. Wang et al., “Videofactory: Swap attention in spatiotemporal
+modeling,”arXivpreprintarXiv:2402.12226,2024. diffusionsfortext-to-videogeneration,”2023.
+[139] C. Wu et al., “Janus: Decoupling visual encoding for unified mul- [173] L. Zhou et al., “Towards automatic learning of procedures from web
+timodal understanding and generation,” in CVPR, 2025, pp. 12966– instructionalvideos,”inAAAI,vol.32,no.1,2018.
+12977. [174] W.Wuetal.,“Alargecross-modalvideoretrievaldatasetwithreading
+[140] K.Tianetal.,“Visualautoregressivemodeling:Scalableimagegenera- comprehension,”PatternRecognition,vol.157,p.110818,2025.
+tionvianext-scaleprediction,”arXivpreprintarXiv:2404.02905,2024. [175] Y. Goyal et al., “Making the v in vqa matter: Elevating the role of
+[141] J.Dengetal.,“Imagenet:Alarge-scalehierarchicalimagedatabase,” image understanding in visual question answering,” in CVPR, 2017,
+inCVPR. Ieee,2009,pp.248–255. pp.6904–6913.
+[176] D. A. Hudson et al., “Gqa: A new dataset for real-world visual
+[142] J. Yao et al., “Reconstruction vs. generation: Taming optimization
+reasoningandcompositionalquestionanswering,”inCVPR,2019,pp.
+dilemmainlatentdiffusionmodels,”arXivpreprintarXiv:2501.01423,
+6700–6709.
+2025.
+[177] K. Marino et al., “Ok-vqa: A visual question answering benchmark
+[143] C.Wuetal.,“Visualchatgpt:Talking,drawingandeditingwithvisual
+requiringexternalknowledge,”inCVPR,2019,pp.3195–3204.
+foundationmodels,”arXivpreprintarXiv:2303.04671,2023.
+[178] D.Schwenketal.,“A-okvqa:Abenchmarkforvisualquestionanswer-
+[144] Y. Shen et al., “Hugginggpt: Solving ai tasks with chatgpt and its
+ingusingworldknowledge,”inECCV. Springer,2022,pp.146–162.
+friendsinhuggingface,”NeurIPS,vol.36,2024.
+[179] A.Mishraetal.,“Ocr-vqa:Visualquestionansweringbyreadingtext
+[145] C.Wangetal.,“Tool-lmm:Alargemulti-modalmodelfortoolagent
+inimages,”in2019internationalconferenceondocumentanalysisand
+learning,”arXivpreprintarXiv:2401.10727,2024.
+recognition(ICDAR). IEEE,2019,pp.947–952.
+[146] Q.Sunetal.,“Generativemultimodalmodelsarein-contextlearners,”
+[180] A.Singhetal.,“Towardsvqamodelsthatcanread,”inCVPR,2019,
+inCVPR,2024,pp.14398–14409.
+pp.8317–8326.
+[147] X. Pan et al., “Kosmos-g: Generating images in context with multi-
+[181] Y. Jang et al., “Tgif-qa: Toward spatio-temporal reasoning in visual
+modallargelanguagemodels,”arXivpreprintarXiv:2310.02992,2023.
+questionanswering,”inCVPR,2017,pp.2758–2766.
+[148] Z.Tangetal.,“Codi-2:In-contextinterleavedandinteractiveany-to-
+[182] A.Yangetal.,“Justask:Learningtoanswerquestionsfrommillions
+anygeneration,”inCVPR,2024,pp.27425–27434.
+ofnarratedvideos,”inICCV,2021,pp.1686–1697.
+[149] Y.Geetal.,“Seed-x:Multimodalmodelswithunifiedmulti-granularity
+[183] K. Grauman et al., “Ego4d: Around the world in 3,000 hours of
+comprehension and generation,” arXiv preprint arXiv:2404.14396,
+egocentricvideo,”inCVPR,2022,pp.18995–19012.
+2024.
+[184] J. Johnson et al., “Clevr: A diagnostic dataset for compositional
+[150] J. Chen et al., “Blip3-o: A family of fully open unified mul-
+languageandelementaryvisualreasoning,”inCVPR,2017,pp.2901–
+timodal models-architecture, training and dataset,” arXiv preprint
+2910.
+arXiv:2505.09568,2025.
+[185] R. Tanaka et al., “Visualmrc: Machine reading comprehension on
+[151] C.Zhouetal.,“Transfusion:Predictthenexttokenanddiffuseimages documentimages,”inAAAI,vol.35,no.15,2021,pp.13878–13888.
+withonemulti-modalmodel,”arXivpreprintarXiv:2408.11039,2024.
+[186] J.Xiaoetal.,“Next-qa:Nextphaseofquestion-answeringtoexplaining
+[152] J. Xie et al., “Show-o: One single transformer to unify multimodal temporalactions,”inCVPR,2021,pp.9777–9786.
+understandingandgeneration,”arXivpreprintarXiv:2408.12528,2024. [187] K. Yi et al., “Clevrer: Collision events for video representation and
+[153] L.Yuetal.,“Magvit:Maskedgenerativevideotransformer,”inCVPR, reasoning,”inICLR,2020.
+2023,pp.10459–10469. [188] K. Li et al., “Mvbench: A comprehensive multi-modal video under-
+[154] X.Chenetal.,“Janus-pro:Unifiedmultimodalunderstandingandgen- standingbenchmark,”inCVPR,2024,pp.22195–22206.
+erationwithdataandmodelscaling,”arXivpreprintarXiv:2501.17811, [189] J. Achiam et al., “Gpt-4 technical report,” arXiv preprint
+2025. arXiv:2303.08774,2023.
+[155] C.Dengetal.,“Emergingpropertiesinunifiedmultimodalpretraining,” [190] S. Wu et al., “Next-gpt: Any-to-any multimodal llm,” arXiv preprint
+arXivpreprintarXiv:2505.14683,2025. arXiv:2309.05519,2023.
+[156] B. Lin et al., “Video-llava: Learning united visual representation by [191] H. Ye et al., “X-vila: Cross-modality alignment for large language
+alignmentbeforeprojection,”arXivpreprintarXiv:2311.10122,2023. model,”arXivpreprintarXiv:2405.19335,2024.
+[157] R. A. Jacobs et al., “Adaptive mixtures of local experts,” Neural [192] D.Kondratyuketal.,“Videopoet:Alargelanguagemodelforzero-shot
+computation,vol.3,no.1,pp.79–87,1991. videogeneration,”inICML,2024.
+[158] W.Shietal.,“Llamafusion:Adaptingpretrainedlanguagemodelsfor [193] L.Yuetal.,“Languagemodelbeatsdiffusion–tokenizeriskeytovisual
+multimodalgeneration,”arXivpreprintarXiv:2412.15188,2024. generation,”arXivpreprintarXiv:2310.05737,2023.
+[159] J. Bai et al., “Qwen-vl: A frontier large vision-language model with [194] Y. Jin et al., “Video-lavit: Unified video-language pre-training
+versatileabilities,”arXivpreprintarXiv:2308.12966,2023. with decoupled visual-motional tokenization,” arXiv preprint
+[160] Y.Yaoetal.,“Minicpm-v:Agpt-4vlevelmllmonyourphone,”arXiv arXiv:2402.03161,2024.
+preprintarXiv:2408.01800,2024. [195] P.Youngetal.,“Fromimagedescriptionstovisualdenotations:New
+[161] J.Linetal.,“Vila:Onpre-trainingforvisuallanguagemodels,”2023. similarity metrics for semantic inference over event descriptions,”
+[162] W. Hong et al., “Cogvideo: Large-scale pretraining for text-to-video TransactionsoftheAssociationforComputationalLinguistics,vol.2,
+generationviatransformers,”inICLR,2023. pp.67–78,2014.
+[163] X. Pan et al., “Transfer between modalities with metaqueries,” arXiv [196] D.Ghoshetal.,“Geneval:Anobject-focusedframeworkforevaluating
+preprintarXiv:2504.06256,2025. text-to-imagealignment,”NeurIPS,vol.36,2024.
+
+JOURNALOFLATEXCLASSFILES,VOL.14,NO.8,AUGUST2025 20
+[197] H.-C.Yietal.,“Graphrepresentationlearninginbioinformatics:trends, XinWangiscurrentlyanAssociateProfessoratthe
+methodsandapplications,”BriefingsinBioinformatics,vol.23,no.1, Department of Computer Science and Technology,
+p.bbab340,2022. Tsinghua University. He got both of his Ph.D. and
+[198] N.Yangetal.,“Moleculegenerationfordrugdesign:agraphlearning B.E degrees in Computer Science and Technology
+perspective,”arXivpreprintarXiv:2202.09212,2022. from Zhejiang University, China. He also holds a
+[199] H. Li et al., “Scene graph generation: A comprehensive survey,” Ph.D. degree in Computing Science from Simon
+Neurocomputing,vol.566,p.127052,2024. Fraser University, Canada. His research interests
+[200] Y. Yao et al., “Exploring the potential of large language models in include multimedia intelligence, machine learning
+graphgeneration,”arXive-prints,pp.arXiv–2403,2024. and its applications. He has published over 200
+[201] P. Liu et al., “Git-mol: A multi-modal large language model for high-qualityresearchpapersintop-tierconferences
+molecularsciencewithgraph,image,andtext,”Computersinbiology (ICML NeurIPS etc.) and journals (IEEE TPAMI,
+andmedicine,vol.171,p.108073,2024. IEEETIPetc.),winningthreebestpaperawardsincludingIEEEICMEand
+[202] J. Zhu et al., “Multimodal graph benchmark,” arXiv preprint ACMMultimediaAsia.HeistherecipientofACMChinaRisingStarAward,
+arXiv:2406.16321,2024. IEEETCMCRisingStarAwardandDAMOAcademyYoungFellow.
+[203] C. Peng et al., “Learning on multimodal graphs: A survey,” arXiv
+preprintarXiv:2402.05322,2024.
+[204] Y.Ektefaieetal.,“Multimodallearningwithgraphs,”NatureMachine
+Intelligence,vol.5,no.4,pp.340–350,2023.
+[205] M.Yoonetal.,“Multimodalgraphlearningforgenerativetasks,”arXiv Yuwei Zhou is currently a Ph.D. student at the
+preprintarXiv:2310.07478,2023. Department of Computer Science and Technology,
+[206] A. Sauer et al., “Adversarial diffusion distillation,” arXiv preprint Tsinghua University. He received his B.E. degree
+arXiv:2311.17042,2023. from the Department of Computer Science and
+[207] Y. Song et al., “Consistency models,” in ICML, 2023, pp. 32211– Technology,TsinghuaUniversity.Hismainresearch
+32252. interestsincludemachinelearning,curriculumlearn-
+[208] S.Luoetal.,“Latentconsistencymodels:Synthesizinghigh-resolution ing,andmulti-modalgenerativeAI.
+images with few-step inference,” arXiv preprint arXiv:2310.04378,
+2023.
+[209] X.Liuetal.,“Flowstraightandfast:Learningtogenerateandtransfer
+datawithrectifiedflow,”inICLR,2023.
+[210] Y.Lipmanetal.,“Flowmatchingforgenerativemodeling,”inICLR,
+2023.
+[211] L.Tianetal.,“Emo:Emoteportraitalive-generatingexpressiveportrait
+videoswithaudio2videodiffusionmodelunderweakconditions,”arXiv
+preprintarXiv:2402.17485,2024. Bin Huang is currently a Ph.D. student at the
+[212] Z. Xu et al., “Magicanimate: Temporally consistent human image Department of Computer Science and Technology,
+animationusingdiffusionmodel,”inCVPR,2024,pp.1481–1490. Tsinghua University. He received his B.E. degree
+[213] Y. Shang et al., “Post-training quantization on diffusion models,” in from the Department of Computer Science and
+CVPR,2023,pp.1972–1981. Technology,TsinghuaUniversity.Hismainresearch
+[214] S.Tangetal.,“Post-trainingquantizationwithprogressivecalibration interestsincludemachinelearningandmulti-modal
+and activation relaxing for text-to-image diffusion models,” arXiv generativeAI.
+preprintarXiv:2311.06322,2023.
+[215] X.Lietal.,“Q-diffusion:Quantizingdiffusionmodels,”inICCV,2023,
+pp.17535–17545.
+[216] D.Zhangetal.,“Laptop-diff:Layerpruningandnormalizeddistillation
+for compressing diffusion models,” arXiv preprint arXiv:2404.11098,
+2024.
+[217] X.Maetal.,“Deepcache:Acceleratingdiffusionmodelsforfree,”in
+CVPR,2024,pp.15762–15772. Hong Chen received B.E. from the Department of
+[218] P.Chenetal.,“Delta-dit:Atraining-freeaccelerationmethodtailored Electronic Engineering, Tsinghua University, Bei-
+fordiffusiontransformers,”arXivpreprintarXiv:2406.01125,2024. jing, China in 2020. He is currently a Ph.D. can-
+[219] S. Tang et al., “Lightweight diffusion models with distillation-based didate in the Department of Computer Science and
+block neural architecture search,” arXiv preprint arXiv:2311.04950, Technology at Tsinghua University. His main re-
+2023. search interests include machine learning, multi-
+[220] L. Li et al., “Autodiffusion: Training-free optimization of time steps modalinformationprocessing.
+andarchitecturesforautomateddiffusionmodelacceleration,”inICCV,
+2023,pp.7105–7114.
+[221] Y.Jinetal.,“Efficientmultimodallargelanguagemodels:Asurvey,”
+arXivpreprintarXiv:2405.10739,2024.
+[222] Y. Li et al., “Mini-gemini: Mining the potential of multi-modality
+visionlanguagemodels,”arXivpreprintarXiv:2403.18814,2024.
+[223] B.Linetal.,“Moe-llava:Mixtureofexpertsforlargevision-language
+models,”arXivpreprintarXiv:2401.15947,2024.
+[224] H. Zhao et al., “Cobra: Extending mamba to multi-modal large lan- Wenwu Zhu is currently a Professor in the De-
+guagemodelforefficientinference,”arXivpreprintarXiv:2403.14520, partment of Computer Science and Technology at
+2024. Tsinghua University. He received his Ph.D. degree
+[225] G. Xiao et al., “Smoothquant: Accurate and efficient post-training from New York University in 1996. His research
+quantization for large language models,” in ICML, 2023, pp. 38087– interests are in the area of data-driven multimedia
+38099. networkingandCross-mediabigdatacomputing.He
+[226] C.Zhangetal.,“Largelanguagemodelsforhuman-robotinteraction: received eight Best Paper Awards, including ACM
+Areview,”BiomimeticIntelligenceandRobotics,p.100131,2023. Multimedia 2012 and IEEE TCSVT in 2001 and
+[227] Y.Muetal.,“Embodiedgpt:Vision-languagepre-trainingviaembodied 2019. He served as EiC for IEEE TMM (2017-
+chainofthought,”NeurIPS,vol.36,2024. 2019)andIEEETCSVT(2024-2025).Heservedin
+[228] W. Zhu et al., “Self-directed machine learning,” AI Open, vol. 3, pp. thesteeringcommitteeforIEEETMM(2015-2016)
+58–70,2022. and IEEE TMC (2007-2010), respectively. He serves as General Co-Chair
+for ACM Multimedia 2018 and ACM CIKM 2019, respectively. He is an
+AAAS Fellow, ACM Fellow, IEEE Fellow, SPIE Fellow, and a member of
+TheAcademyofEurope(AcademiaEuropaea).

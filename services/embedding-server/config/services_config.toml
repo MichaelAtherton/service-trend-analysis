@@ -1,0 +1,22 @@
+# BERTrend Embedding Service Configuration
+
+[embedding]
+# Model configuration
+model_name = "sentence-transformers/all-MiniLM-L6-v2"
+device = "cuda"  # or "cpu" for non-GPU environments
+batch_size = 32
+max_seq_length = 384
+
+# Caching configuration
+enable_cache = true
+cache_dir = "/app/.cache/embeddings"
+
+# Server configuration
+host = "0.0.0.0"
+port = 8765
+workers = 4
+
+# Authentication
+require_auth = true
+client_id_header = "X-Client-ID"
+client_secret_header = "X-Client-Secret"

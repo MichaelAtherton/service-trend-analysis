@@ -71,17 +71,26 @@ def analyze(request: AnalysisRequest):
 
 ### II. Deterministic Multi-Pass Detection
 
-**Rule**: Trend detection MUST be rule-based and deterministic. Given the same corpus and constitution, the API MUST return identical results every time.
+**Rule**: Trend detection MUST be rule-based and reproducible. Given the same corpus and constitution, the API MUST return consistent results within documented tolerance bounds.
 
 **Requirements**:
 - Four detection passes MUST execute in order: Emergence → Maturation → Decline → Gaps
-- Each pass MUST use explicit thresholds (no randomness, no ML models)
+- Each pass MUST use explicit thresholds (no randomness in threshold evaluation)
 - Acceleration rate calculation: `recent_count / historical_count ≥ 3.0`
 - Variance calculation: `sqrt(variance) / mean < 0.2` for maturation
 - Date range windows MUST be configurable but have sensible defaults (30/60/90 days)
 - All thresholds MUST be documented in OpenAPI schema
 
-**Rationale**: Executives and researchers need reproducible analysis. Non-deterministic results (ML, randomness) create distrust and make debugging impossible. Rule-based detection provides explainability and consistency.
+**Bounded Non-Determinism Allowance**:
+- **Technique extraction** (AI Technique Extraction Service) uses BERTrend's neural topic clustering, which has stochastic elements (HDBSCAN initialization)
+- **Acceptable variation**: Given the same input text batch:
+  - Technique names MUST match exactly (100% reproducible via deterministic taxonomy mapping)
+  - Confidence scores MAY vary by ±0.05 absolute difference due to topic cluster variations
+  - Topic assignments MAY vary, but final extracted techniques MUST be stable
+- **Random seed setting**: Where possible, set random seeds for reproducibility in development/testing
+- **Trend detection** (downstream Trend Analyzer service) remains fully deterministic using rule-based thresholds
+
+**Rationale**: Executives and researchers need reproducible analysis. BERTrend's semantic clustering (HDBSCAN + UMAP) provides superior quality over deterministic alternatives (k-means). The stochastic variation in intermediate topic assignments is acceptable because final technique mapping is deterministic. This aligns with BERTrend's production use at RTE France for real-time trend monitoring. Rule-based trend detection provides explainability and consistency.
 
 **Pass Definitions**:
 - **Pass A (Emergence)**: Recent acceleration ≥3x, first mention <60 days

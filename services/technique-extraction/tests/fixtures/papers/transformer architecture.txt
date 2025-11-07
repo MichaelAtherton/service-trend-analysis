@@ -1,0 +1,585 @@
+An Introduction to Transformers
+Richard E. Turner
+Department of Engineering, University of Cambridge, UK
+Microsoft Research, Cambridge, UK
+ret26@cam.ac.uk
+Abstract. The transformer is a neural network component that can be used to learn useful represen-
+tations of sequences or sets of data-points [Vaswani et al., 2017]. The transformer has driven recent
+advancesinnaturallanguageprocessing[Devlinetal.,2019], computervision[Dosovitskiyetal.,2021],
+andspatio-temporalmodelling[Bietal.,2022]. Therearemanyintroductionstotransformers,butmost
+donotcontainprecisemathematicaldescriptionsofthearchitectureandtheintuitionsbehindthedesign
+choices are often also missing.1 Moreover, as research takes a winding path, the explanations for the
+components of the transformer can be idiosyncratic. In this note we aim for a mathematically precise,
+intuitive, and clean description of the transformer architecture. We will not discuss training as this is
+rather standard. We assume that the reader is familiar with fundamental topics in machine learning
+including multi-layer perceptrons, linear transformations, softmax functions and basic probability.
+1SeePhuongandHutter[2022]foranexceptiontothis.
+4202
+beF
+8
+]GL.sc[
+5v75501.4032:viXra
+
+1 Preliminaries
+Let’sstartbytalkingabouttheformofthedatathatisinputintoatransformer,
+the goal of the transformer, and the form of its output.
+1.1 Input data format: sets or sequences of tokens
+In order to apply a transformer, data must be converted into a set or sequence1
+of N tokens x(0) of dimension D (see figure 1). The tokens can be collected
+n
+into a matrix X(0) which is D×N.2 To give two concrete examples
+1. apassageoftextcanbebrokenupintoasequenceofwordsorsub-words,
+with each word being represented by a single unique vector,
+2. an image can be broken up into a set of patches and each patch can be Figure1: TheinputtoatransformerisNvectors
+mapped into a vector. x( n0) which are each D dimensional. These can
+becollectedtogetherintoanarrayX(0).
+The embeddings can be fixed or they can be learned with the rest of the pa- 1 Strictlyspeaking,thecollectionoftokensdoes
+rameters of the model e.g. the vectors representing words can be optimised or not need to have an order and the transformer
+canhandlethemasaset(whereorderdoesnot
+a learned linear transform can be used to embed image patches (see figure 2).
+matter),ratherthanasequence. Seesection3.
+A sequence of tokens is a generic representation to use as an input – many 2Notethatmuchoftheliteratureusesthetrans-
+differenttypesofdatacanbe“tokenised”andtransformersarethenimmediately posednotationwherebythedatamatrixisN×D,
+applicable rather than requiring a bespoke architectures for each modality as butIwantsequencestorunacrossthepageand
+was previously the case (CNNs for images, RNNs for sequences, deepsets for featuresdownitintheschematics(aconvention
+Iuseinotherlecturenotes).
+sets etc.). Moreover, this means that you don’t need bespoke handcrafted
+architecturesformixingdataofdifferentmodalities—youcanjustthrowthem
+all into a big set of tokens.
+1.2 Goal: representations of sequences
+The transformer will ingest the input data X(0) and return a representation of
+the sequence in terms of another matrix X(M) which is also of size D ×N.
+The slice x = X(M) will be a vector of features representing the sequence at
+n :,n
+the location of token n. These representations can be used for auto-regressive
+predictionofthenext(n+1)thtoken,globalclassificationoftheentiresequence
+(by pooling across the whole representation), sequence-to-sequence or image-
+to-image prediction problems, etc. Here M denotes the number of layers in the
+transformer.
+2 The transformer block
+Figure2: Encodinganimage: anexample[Doso-
+vitskiy et al., 2021]. An image is split into N
+Therepresentationoftheinputsequencewillbeproducedbyiterativelyapplying patches. Eachpatchisreshapedintoavectorby
+a transformer block thevecoperator. Thisvectorisacteduponbya
+matrixW whichmapsthepatchtoaD dimen-
+X(m) =transformer-block(X(m−1)). sional vector x( n0). These vectors are collected
+together into the input X(0). The matrix W
+canbelearnedwiththerestofthetransformer’s
+Theblockitselfcomprisestwostages: oneoperatingacrossthesequenceandone
+parameters.
+operatingacrossthefeatures. Thefirststagerefineseachfeatureindependently
+3 The idea of interleaving processing across the
+according to relationships between tokens across the sequence e.g. how much
+sequenceandacrossfeaturesisacommonmotif
+a word in a sequence at position n depends on previous words at position n′, of many machine learning architectures includ-
+or how much two different patches from an image are related to one another. inggraphneuralnetworks(interleavesprocessing
+This stage acts horizontally across rows of X(m−1). The second stage refines across nodes and across features), Fourier neu-
+raloperators(interleavesprocessingacrossspace
+the features representing each token. This stage acts vertically across a column
+and across features), and bottleneck blocks in
+of X(m−1). By repeatedly applying the transformer block the representation at ResNets(interleavesprocessingacrosspixelsand
+tokennandfeaturedcanbeshapedbyinformationattokenn′ andfeatured′.3 acrossfeatures).
+1
+
+2.1 Stage 1: self-attention across the sequence
+The output of the first stage of the transformer block is another D×N array,
+Y(m). The output is produced by aggregating information across the sequence
+independently for each feature using an operation called attention.
+Attention. Specifically, the output vector at location n, denoted y(m), is pro-
+n
+duced by a simple weighted average of the input features at location n′ =
+1...N, denoted x( nm ′ −1), that is4 4 Relationship to Convolutional Neural Net-
+works (CNNs). The attention mechanism can
+N recover convolutional filtering as a special case
+y n(m) = X x( nm ′ −1)A( nm ′,n). (1) e.g.ifx( n0) isa1Dregularlysampledtime-series
+n′=1 and A(m) =A(m) then the attention mecha-
+n′,n n′−n
+nismineq.1becomesaconvolution. Unlikenor-
+Here the weighting is given by a so-called attention matrix A(m) which is of mal CNNs, these filters have full temporal sup-
+n′,n port. Laterwewillseethatthefiltersthemselves
+size5 N ×N and normalises over its columns PN A(m) = 1. Intuitively dynamicallydependontheinput,anotherdiffer-
+n′=1 n′,n
+ence from standard CNNs. We will also see a
+speaking A(m) will take a high value for locations in the sequence n′ which are
+n′,n similarity: transformers will use multiple atten-
+of high relevance for location n. For irrelevant locations, it will take the value tion maps in each layer in the same way that
+0. For example, all patches of a visual scene coming from a single object might CNNsusemultiplefilters(thoughtypicallytrans-
+formers have fewer attention maps than CNNs
+have high corresponding attention values.
+havechannels).
+We can compactly write the relationship as a matrix multiplication, 5 The need for transformers to store and com-
+puteN×Nattentionarrayscanbeamajorcom-
+Y(m) =X(m−1)A(m), (2) putationalbottleneck,whichmakesprocessingof
+longsequenceschallenging.
+and we illustrate it below in figure 3.6 6 When training transformers to perform auto-
+regressive prediction, e.g. predicting the next
+wordinasequencebasedonthepreviousones,a
+clevermodificationtothemodelcanbeusedto
+accelerate training and inference. This involves
+applyingthetransformertothewholesequence,
+and using masking in the attention mechanism
+(A(m) becomes an upper triangular matrix) to
+preventfuturetokensaffectingtherepresentation
+atearliertokens. Causalpredictionscanthenbe
+madefortheentiresequenceinoneforwardpass
+throughthetransformer. Seesection4formore
+information.
+Figure 3: The output of an element of the attention mechanism, Y(m), is
+d,n
+producedbythedotproductoftheinputhorizontallyslicedthroughtimeX(m)
+d,:
+with a vertical slice from the attention matrix A(m). Here the shading in the
+:,n
+attention matrix represent the elements with a high value in white and those
+with a low value, near to 0, in black.
+Self-attention. So far, so simple. But where does the attention matrix come
+from? The neat idea in the first stage of the transformer is that the attention
+matrix is generated from the input sequence itself – so-called self-attention.
+A simple way of generating the attention matrix from the input would be to
+measure the similarity between two locations by the dot product between the
+features at those two locations and then use a softmax function to handle the
+normalisation i.e.7 7 Wetemporarilysuppressthesuperscriptshere
+A = exp(x⊤ nx n′) . to ease the notation so A( nm ,n) ′ becomes A n,n′
+n,n′ PN n′′=1exp(x⊤ n′′x n′) andsimilarlyx( nm) becomesxn.
+2
+
+However,thisnaïveapproachentanglesinformationaboutthesimilaritybetween
+locations in the sequence with the content of the sequence itself.
+An alternative is to perform the same operation on a linear transformation of
+the sequence, Ux n, so that8 8 Oftenyouwillseeattentionparameterisedas
+√
+A
+n,n′
+=
+PN
+n′′e =x 1p e( xx p⊤ n (U
+x⊤
+n⊤ ′U ′Ux ⊤n U′)
+x n′)
+A n,n′ = PN n′′e =x 1p( ex x⊤ n p(U x⊤
+⊤
+n′U ′Ux ⊤n′ U/
+x
+nD ′/) √ D).
+Dividingtheexponentsbythesquare-rootofthe
+Typically,U willprojecttoalowerdimensionalspacei.e. U isK×Ddimensional dimensionality of the projected vector helps nu-
+with K <D. In this way only some of the features in the input sequence need merical stability, but in this presentation we ab-
+sorbthistermintoU toimproveclarity.
+be used to compute the similarity, the others being projected out, thereby de-
+coupling the attention computation from the content. However, the numerator
+in this construction is symmetric. This could be a disadvantage. For example,
+we might want the word ‘caulking iron’ to be strongly associated with the word
+‘tool’ (as it is a type of tool), but have the word ‘tool’ more weakly associated
+with the word ‘caulking iron’ (because most of us rarely encounter it).9 9 Some of this effect could be handled by the
+Fortunately,itissimpletogeneralisetheattentionmechanismabovetobeasym- normalisationinthedenominator,butasymmet-
+ric similarity allows more flexibility. However, I
+metric by applying two different linear transformations to the original sequence,
+donotknowofexperimentalevidencetosupport
+exp(cid:0) x⊤U⊤U x (cid:1) usingUq ̸=U k.
+A n,n′ = PN n′′=1expn (cid:0) xk ⊤ n′′Uq k⊤Un′ qx n′(cid:1). (3) 1 w0 orkR se (la Rt Nio Nns sh ).ip Itto isR ile luc mur ir ne an tt ingN te our ca ol mN pae rt e-
+the temporal processing in the transformer to
+The two quantities that are dot-producted together here q =U x and k = that of RNNs which recursively update a hid-
+n q n n
+U kx
+n
+are typically known as the queries and the keys, respectively. den state feature representation (x( n1)) based
+on the current observation (x(0)) and the pre-
+Together equations 2 and 3 define the self-attention mechanism. Notice that n
+vious hidden state x(1) = f(x(1) ;x(0)) =
+the K×D matrices U and U are the only parameters of this mechanism.10 n n−1 n
+q k f(f(x(1) ;x(0) );x(0)). Here we’ve unrolled
+Multi-head self-attention (MHSA). In the self-attention mechanisms de- n−2 n−1 n
+the RNN one step to show that observations
+scribed above, there is one attention matrix which describes the similarity of whicharenearbytothehiddenstate(e.g.x(0))
+n
+twolocationswithinthesequence. Thiscanactasabottleneckinthearchitec- are treated differently from observations that
+ture – it would be useful for pairs of points to be similar in some ‘dimensions’ are further away (e.g. x(0) ), as information is
+n−1
+and different in others.11 propagatedbyrecurrentapplicationofthefunc-
+tion f(·). In contrast, in the transformer, self-
+In order to increase capacity of the first self-attention stage, the transformer attentiontreatsallobservationsatalltime-points
+block applies H sets of self-attention in parallel12 (termed H heads) and then in an identical manner, no matter how far away
+they are. This is one reason why they find it
+linearly projects the results down to the D×N array required for further pro-
+simplertolearnlong-rangerelationships.
+cessing. This slight generalisation is called multi-head self-attention.
+11 If attention matrices are viewed as a data-
+drivenversionoffiltersinaCNN,thentheneed
+H
+Y(m) =MHSA (X(m−1))=X V(m)X(m−1)A(m), where (4) for more filters / channels is clear. Typical
+θ h h choices for the number of heads H is 8 or 16,
+h=1 lowerthantypicalnumbersofchannelsinaCNN.
+exp(cid:18)(cid:16) k(m)(cid:17)⊤ q(m)(cid:19) 12 The computational cost of multi-head self-
+h,n h,n′ attentionisusuallydominatedbythematrixmul-
+[A(m)] = (5)
+h n,n′ (cid:18)(cid:16) (cid:17)⊤ (cid:19) tiplication involving the attention matrix and is
+PN exp k(m) q(m) thereforeO(HDN2).
+n′′=1 h,n′′ h,n′
+13 The product of the matrices V(m)X(m−1)
+q(m) =U(m)x(m−1) and k(m) =U(m)x(m−1). (6) is related to the so-called values whh ich are nor-
+h,n q,h n h,n k,h n
+mallyintroducedindescriptionsofself-attention
+alongsidequeriesandkeys. Intheusualpresen-
+HeretheH matricesV(m) whichareD×D projecttheH self-attentionstages
+h tation,thereisaredundancybetweenthelinear
+down to the required output dimensionality D.13 transformusedtocomputethevaluesandthelin-
+TheadditionofthematricesV(m),andthefactthatretainingjustthediagonal earprojectionattheendofthemulti-headself-
+h attention, so we have not explicitly introduced
+elements of the attention matrix A(m) will interact the signal instantaneously themhere. Thestandardpresentationcanbere-
+with itself, does mean there is some cross-feature processing in multi-head self- covered by setting V h to be a low-rank matrix
+V = U U where U is DxK and U is
+attention, as opposed to it containing purely cross-sequence processing. How- h h v,h h v,h
+KxD. Typically K is set to K =D/H so that
+ever, the stage has limited capacity for this type of processing and it is the job
+changing the number of heads leads to models
+of the second stage to address this. withsimilarnumbersofparametersandcompu-
+tationaldemands.
+3
+
+Figure 4 shows multi-head self-attention schematically. Multi-head attention
+comprises the following parameters θ = {U ,U ,V }H i.e. 3H matrices
+q,h k,h h h=1
+of size K×D, K×D, and D×D respectively.
+Figure4: Multi-headself-attentionappliesHself-
+attention operations in parallel and then linearly
+projectstheHD×N dimensionaloutput down to
+D×N byapplyingalineartransform,implemented
+herebytheH matricesV .
+h
+2.2 Stage 2: multi-layer perceptron across features
+Thesecondstageofprocessinginthetransformerblockoperatesacrossfeatures,
+refining the representation using a non-linear transform. To do this, we simply
+apply a multi-layer perceptron (MLP) to the vector of features at each location
+n in the sequence,
+x(m) =MLP (y(m)).
+n θ n
+Notice that the parameters of the MLP, θ, are the same for each location n.14
+15 14 The MLPs used typically have one or two
+hidden-layers with dimension equal to the num-
+beroffeaturesD(orlarger). Thecomputational
+2.3 The transformer block: Putting it all together with residual con- costofthisstepisthereforeroughlyN×D×D. If
+nections and layer normalisation thefeatureembeddingsizeapproachesthelength
+of the sequence D≈N, the MLPs can start to
+dominatethecomputationalcomplexity(e.g.this
+We can now stack MHSA and MLP layers to produce the transformer block.
+canbethecaseforvisiontransformerswhichem-
+Rather than doing this directly, we make use of two ubiquitous transformations
+bedlargepatches).
+to produce a more stable model that trains more easily: residual connections
+15 Relationship to Graph Neural Networks
+and normalisation.
+(GNNs). Atahighlevel,graphneuralnetworks
+Residual connections. The use of residual connections is widespread across interleave two steps. First, a message passing
+stepwhereeachnodereceivesmessagesfromits
+machinelearningastheymakeinitialisationsimple,haveasensibleinductivebias
+neighbours which are then aggregated together.
+towards simple functions, and stabilise learning [Szegedy et al., 2017]. Instead
+Second, a feature processing step where the in-
+of directly specifying a function x(m) =f θ(x(m−1)), the idea is to parameterise comingaggregatedmessagesareusedtoupdate
+it in terms of an identity mapping and a residual term each node’s features. Through this lens, the
+transformer can be viewed as an unrolled GNN
+x(m) =x(m−1)+res (x(m−1)). with each token corresponding to an edge of a
+θ
+fully connected graph. MHSA forms the mes-
+Equivalently, this can be viewed as modelling the differences between the repre- sage passing step, and the MLPs forming the
+sentation x(m)−x(m−1) = res (x(m−1)) and will work well when the function featureupdatestep. Eachtransformerblockcor-
+θ responds to one update of the GNN. Moreover,
+that is being modelled is close to identity. This type of parameterisation is used
+manymethodsforscalingtransformersintroduce
+forboththeMHSAandMLPstagesinthetransformer, withtheideathateach sparse forms of attention where each token at-
+appliesamildnon-lineartransformationtotherepresentation. Overmanylayers, tends to only a restricted set of other tokens,
+that is they specify a sparse graph connectivity
+these mild non-linear transformations compose to form large transformations.
+structure. Arguably,inthiswaytransformersare
+Tokennormalisation. Theuseofnormalisation,suchasLayerNormandBatch- moregeneralastheycanusedifferentgraphsat
+Norm, is also widespread across the deep learning community as a means to differentlayersinthetransformer.
+stabilise learning. There are many potential choices for how to compute nor-
+malisation statistics (see figure 5 for a discussion), but the standard approach
+is use LayerNorm [Ba et al., 2016] which normalises each token separately, re-
+moving the mean and dividing by the standard deviation,16
+1 16 Thisisalsoknownasz-scoringinsomefields
+x¯ d,n = p (x d,n−mean(x n))γ d+β d =LayerNorm(X) d,n andisrelatedtowhitening.
+var(x )
+n
+where mean(x )= 1 PD x and var(x )= 1 PD (x −mean(x ))2.
+n D d=1 d,n n D d=1 d,n n
+The two parameters γ and β are a learned scale and shift.
+d d
+4
+
+batch
+erutaef
+d=1
+d=D batch
+n=1 n=N
+sequence
+erutaef
+LayerNorm for transformers BatchNorm for transformers
+(TokenNorm)
+Figure 5: Transformers perform layer normali-
+sation (left hand schematic) which normalises the
+d=1
+meanandstandarddeviationofeachindividualto-
+ken in each sequence in the batch. Batch normal-
+isation (right hand schematic), which normalises
+over the feature and batch dimension together, is
+found to be far less stable [Shen et al., 2020].
+d=D
+Otherflavoursofnormalisationarepossibleandpo-
+n=1 n=N tentiallyunder-explorede.g.instancenormalisation
+sequence wouldnormaliseacrossthesequencedimensionin-
+stead.
+17 Whilst it is possible to control the non-
+linearitiesandweightsinneuralnetworkstopre-
+vent explosion of the representation, the con-
+straints this places on the activation functions
+can adversely affect learning. The LayerNorm
+approachisarguablysimplerandsimplertotrain.
+batch
+erutaef
+d=1
+d=D batch
+image height
+and width
+erutaef
+As this transform normalises each token individually and as LayerNorm is ap-
+plied differently in CNNs, see figure 6, I would prefer to call this normalisation
+TokenNorm.
+This transform stops feature representations blowing up in magnitude as non-
+linearities are repeatedly applied through neural networks.17 In transformers,
+LayerNorm is usually applied in the residual terms of both the MHSA and MLP
+stages.
+Puttingthisalltogether,wehavethestandardtransformerblockshownschemat-
+ically in figure 7.18
+LayerNorm for CNNs BatchNorm for CNNs
+d=1
+d=D
+n=1 n=N
+sequence
+Figure 6: In CNNs LayerNorm is conventionally
+appliedtoboththefeaturesand acrossthefea-
+turemaps(i.e.acrosstheheightandwidthofthe
+images)(lefthandschematic). Astheheightand
+widthdimensioninCNNscorrespondstothese-
+quence dimension, 1...N of transformers, the
+term’LayerNorm’isarguablyusedinconsistently
+(comparetofigure5). Iwouldprefertocallthe
+normalisation used in transformers ’token nor-
+malisation’ instead to avoid confusion. Batch
+normalisation (right hand schematic) is consis-
+tentlydefined.
+18 Theexactconfigurationofthenormalisation
+Figure 7: The transformer block. Residual connections are added to the multi- and residual layers can differ, but here we show
+head self-attention (MHSA) stage and the multi-layer perceptron (MLP) stage. astandardsetup[Xiongetal.,2020].
+Layer normalisation is also applied to the inputs of both the MHSA and the
+MLP. They are then stacked. This block can then be repeated M times.
+3 Position encoding
+The transformer treats the data as a set — if you permute the columns of X(0)
+(i.e. re-order the tokens in the input sequence) you permute all the represen-
+tations throughout the network X(m) in the same way. This is key for many
+applicationssincetheremaynotbeanaturalwaytoordertheoriginaldatainto
+a sequence of tokens. For example, there is no single ‘correct’ order to map
+5
+
+image patches into a one dimensional sequence.
+However, this presents a problem since positional information is key in many
+problems and the transformer has thrown it out. The sequence ‘herbivores
+eat plants’ should not have the same representation (up to permutation) as
+‘plants eat herbivores’. Nor should an image have the same representation as
+one comprising the same patches randomly permuted. Thankfully, there is a
+simple fix for this: the location of each token within the original dataset should
+be included in the token itself, or through the way it is processed. There are
+severaloptionshowtodothis,oneistoincludethisinformationdirectlyintothe
+embeddingX(0). E.g.bysimplyaddingthepositionembedding(surprisinglythis
+works19) or concatenating. The position information can be fixed e.g. adding a 19 Visiontransformers[Dosovitskiyetal.,2021]
+vector of sinusoids of different frequencies and phases to encode position of a use x( n0) = Wpn +en where pn is the nth
+wordinasentence[Vaswanietal.,2017], oritcanbeafreeparameterwhichis vectorised patch, en is the learned position em-
+learned [Devlin et al., 2019], as it often done in image transformers. There are bedding,andW isthepatchembeddingmatrix.
+Arguably it would be more intuitive to append
+also approaches toinclude relative distanceinformation between pairs of tokens
+thepositionembeddingtothepatchembedding.
+by modifying the self-attention mechanism [Wu et al., 2021] which connects to
+However, if we use the concatenation approach
+equivariant transformers. andconsiderwhathappensafterapplyingalinear
+transform,
+h i h ih i
+4 Application specific transformer variants V
+Wpn
+=
+V11 V12 Wpn
+en V21 V22 en
+h i
+=
+V11Wpn+V12en
+Forcompletenesswewillgivesomesimpleexamplesforhowthestandardtrans- V21Wpn+V22en
+former architecture above is used and modified for specific applications. This =W′pn+e′
+n
+includes adding a head to the transformer blocks to carry out the desired pre-
+we recover the additive construction, which is
+diction task, but also modifications to the standard construction of the body. one hint as to why the additive construction
+works.
+4.1 Auto-regressive language modelling
+In auto-regressive language modelling the goal is to predict the next word w
+n
+in the sequence given the previous words w , that is to return p(w =
+1:n−1 n
+w|w ). Two modifications are required to use the transformer for this task
+1:n−1
+— a change to the body to make the architecture efficient and the addition of
+a head to make the predictions for the next word.
+Modification to the body: auto-regressive masking. Applying the version
+ofthetransformerwehavecoveredsofartoauto-regressivepredictioniscompu-
+tationallyexpensive,bothduringtrainingandtesting. Toseethis,notethatAR
+predictionrequiresmakingasequenceofpredictions: youstartbypredictingthe
+firstwordp(w =w),thenyoupredictthesecondgiventhefirstp(w =w|w ),
+1 2 1
+then the third word given the first two p(w = w|w ,w ), and so on until you
+2 1 2
+predict the last item in the sequence p(w =w|w ). This requires apply-
+N 1:N−1
+ing the transformer N −1 times with input sequences that grow by one word
+each time: w ,w ,...,w . This is very costly at both training-time and
+1 1:2 1:N−1
+test-time.
+Fortunately, there is a neat way around this by enabling the transformer to
+support incremental updates whereby if you add a new token to an existing
+sequence,youdonotchangetherepresentationfortheoldtokens. Tomakethis
+property clear, I will define it mathematically: let the output of the incremental
+transformer applied to the first n words be denoted20 20 NotethatI’moverloadingthenotationhere:
+X(n) =transformer-incremental(w ). previously superscripts denoted layers in the
+1:n transformer, but here I’m using them to denote
+Then the output of the incremental transformer when applied to n+1 words is thenumberofitemsintheinputsequence.
+X(n+1) =transformer-incremental(w ).
+1:n+1
+In the incremental transformer X(n) = X(n+1) i.e. the representation of the
+1:D,1:n
+old tokens has not changed by adding the new one. If we have this property
+6
+
+then 1. at test-time auto-regressive generation can use incremental updates to
+compute the new representation efficiently, 2. at training time we can make
+the N auto-regressive predictions for the whole sequence p(w = w)p(w =
+1 2
+w|w )p(w =w|w ,w )...p(w =w|w ) in a single forwards pass.
+1 2 1 2 N 1:N−1
+Unfortunately, the standard transformer introduced above does not have this
+property due to the form of the attention used. Every token attends to every
+other token, so if we add a new token to the sequence then the representation
+for every token changes throughout the transformer. However, if we mask the
+attention matrix so that it is upper-triangular A = 0 when n > n′ then
+n,n′
+the representation of each word only depends on the previous words.21 This 21 Notice that this masking operation also en-
+then gives us the incremental property as none of the other operations in the codes position information since you can infer
+transformer operate across the sequence.22 theorderofthetokensfromthemask.
+22 This restriction to the attention will cause a
+Adding a head. We’re now almost set to perform auto-regressive language
+lossofrepresentationalpower. It’sanopenques-
+modelling. We apply the masked transformer block M times to the input se-
+tionastohowsignificantthisisandwhetherin-
+quence of words. We then take the representation at token n−1, that is x(M) creasing the capacity of the model can mitigate
+n−1
+which captures causal information in the sequence at this point, and generate ite.g.byusinghigherdimensionaltokens,i.e.in-
+creasingD.
+the probability of the next word through a softmax operation
+exp(g⊤x(M))
+p(w =w|w )=p(w =w|x(M))= w n−1 .
+n 1:n−1 n n−1 PW exp(g⊤x(M))
+w=1 w n−1
+Here W is the vocabulary size, the wth word is w and {g }W are softmax
+w w=1
+weights that will be learned.
+4.2 Image classification
+For image classification the goal is to predict the label y given the input image
+which has been tokenised into the sequence X(0), that is p(y|X(0)). One way
+of computing this distribution would be to apply the standard transformer body
+M timestothetokenisedimagepatchesbeforeaggregatingthefinallayerofthe
+transformer,X(M),acrossthesequencee.g.byspatialpoolingh=PN x(M)
+n=1 n
+inordertoformafeaturerepresentationfortheentireimage. Therepresentation
+hcouldthenbeusedtoperformsoftmaxclassification. Analternativeapproach
+is found to perform better [Dosovitskiy et al., 2021]. Instead we introduce a
+new fixed (learned) token at the start n = 0 of the input sequence x(0). At
+0
+the head we use the n=0 vector, x(M), to perform the softmax classification.
+0
+This approach has the advantage that the transformer maintains and refines a
+global representation of the sequence at each layer m of the transformer that is
+appropriate for classification.
+4.3 More complex uses
+The transformer block can also be used as part of more complicated systems
+e.g. in encoder-decoder architectures for sequence-to-sequence modelling for
+translation[Devlinetal.,2019,Vaswanietal.,2017]orinmaskedauto-encoders
+for self-supervised vision systems [He et al., 2021].
+5 Conclusion
+Thisconcludesthisbasicintroductiontotransformerswhichaspiredtobemath-
+ematically precise and to provide intuitions behind the design decisions.
+We have not talked about loss functions or training in any detail, but this is
+because rather standard deep learning approaches are used for these. Briefly,
+7
+
+transformers are typically trained using the Adam optimiser. They are often
+slow to train compared to other architectures and typically get more unstable
+as training progresses. Gradient clipping, decaying learning rate schedules, and
+increasing batch sizes through training help to mitigate these instabilities, but
+often they still persist.
+Acknowledgements. We thank Dr. Max Patacchiola, Sasha Shysheya, John
+Bronskill, Runa Eschenhagen and Jess Riedel for feedback on previous versions
+of this note. Richard E. Turner is supported by Microsoft, Google, Amazon,
+ARM, Improbable and EPSRC grant EP/T005386/1.
+References
+Jimmy Lei Ba, Jamie Ryan Kiros, and Geoffrey E Hinton. Layer normalization.
+arXiv preprint arXiv:1607.06450, 2016.
+Kaifeng Bi, Lingxi Xie, Hengheng Zhang, Xin Chen, Xiaotao Gu, and Qi Tian.
+Pangu-weather: A 3d high-resolution model for fast and accurate global
+weather forecast, 2022.
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. BERT:
+Pre-training of deep bidirectional transformers for language understanding.
+In Proceedings of the 2019 Conference of the North American Chapter
+of the Association for Computational Linguistics: Human Language Tech-
+nologies, Volume 1 (Long and Short Papers), pages 4171–4186, Minneapo-
+lis, Minnesota, June 2019. Association for Computational Linguistics. doi:
+10.18653/v1/N19-1423. URL https://aclanthology.org/N19-1423.
+Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xi-
+aohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer,
+Georg Heigold, Sylvain Gelly, Jakob Uszkoreit, and Neil Houlsby. An im-
+age is worth 16x16 words: Transformers for image recognition at scale. In
+9th International Conference on Learning Representations, ICLR 2021, Vir-
+tual Event, Austria, May 3-7, 2021. OpenReview.net, 2021. URL https:
+//openreview.net/forum?id=YicbFdNTTy.
+Kaiming He, Xinlei Chen, Saining Xie, Yanghao Li, Piotr Dollár, and Ross Gir-
+shick. Masked autoencoders are scalable vision learners, 2021.
+Mary Phuong and Marcus Hutter. Formal algorithms for transformers. arXiv
+preprint arXiv:2207.09238, 2022.
+Sheng Shen, Zhewei Yao, Amir Gholami, Michael Mahoney, and Kurt Keutzer.
+PowerNorm: Rethinking batch normalization in transformers. In Hal Daumé
+III and Aarti Singh, editors, Proceedings of the 37th International Confer-
+ence on Machine Learning, volume 119 of Proceedings of Machine Learn-
+ing Research, pages 8741–8751. PMLR, 13–18 Jul 2020. URL https:
+//proceedings.mlr.press/v119/shen20e.html.
+Christian Szegedy, Sergey Ioffe, Vincent Vanhoucke, and Alexander Alemi.
+Inception-v4,inception-resnetandtheimpactofresidualconnectionsonlearn-
+ing. In Proceedings of the AAAI conference on artificial intelligence, vol-
+ume 31, 2017.
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+Aidan N Gomez, Lukasz Kaiser, and Illia Polosukhin. Attention is all
+you need. In I. Guyon, U. Von Luxburg, S. Bengio, H. Wallach,
+8
+
+R. Fergus, S. Vishwanathan, and R. Garnett, editors, Advances in Neu-
+ral Information Processing Systems, volume 30. Curran Associates, Inc.,
+2017. URL https://proceedings.neurips.cc/paper_files/paper/
+2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf.
+K. Wu, H. Peng, M. Chen, J. Fu, and H. Chao. Rethinking and improv-
+ing relative position encoding for vision transformer. In 2021 IEEE/CVF
+International Conference on Computer Vision (ICCV), pages 10013–10021,
+Los Alamitos, CA, USA, oct 2021. IEEE Computer Society. doi: 10.1109/
+ICCV48922.2021.00988. URL https://doi.ieeecomputersociety.org/
+10.1109/ICCV48922.2021.00988.
+Ruibin Xiong, Yunchang Yang, Di He, Kai Zheng, Shuxin Zheng, Chen Xing,
+Huishuai Zhang, Yanyan Lan, Liwei Wang, and Tieyan Liu. On layer normal-
+ization in the transformer architecture. In Hal Daumé III and Aarti Singh,
+editors, Proceedings of the 37th International Conference on Machine Learn-
+ing, volume 119 of Proceedings of Machine Learning Research, pages 10524–
+10533. PMLR, 13–18 Jul 2020. URL https://proceedings.mlr.press/
+v119/xiong20b.html.
+9

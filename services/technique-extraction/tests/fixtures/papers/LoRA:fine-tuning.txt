@@ -1,0 +1,1177 @@
+5202
+luJ
+2
+]GL.sc[
+1v60810.7052:viXra
+LoRA Fine-Tuning Without GPUs:
+A CPU-Efficient Meta-Generation Framework for LLMs
+RezaArabpour12 HaitzSáezdeOcárizBorde3 AnastasisKratsios12
+Abstract etal.,2022;Pfeifferetal.,2020;Dingetal.,2022;Yuetal.,
+2022;Hanetal.,2024)offeraworkaround:insteadofupdat-
+Low-RankAdapters(LoRAs)havetransformed
+ingallweights,theytweakasmallsubset,slashingcompute
+the fine-tuning of Large Language Models
+andstoragecostswhilemaintainingreasonableperformance. (LLMs)byenablingparameter-efficientupdates.
+Among these, the Low-Rank Adapter (LoRA) (Hu et al.,
+However,theirwidespreadadoptionremainslim-
+2021)approachhasbecomestandardduetocombinedsim-
+ited by the reliance on GPU-based training. In
+plicityandsurprisinglypowerfuleffectiveness. Neverthe-
+thiswork,weproposeatheoreticallygroundedap-
+less,formodernmassiveLLMs,LoRAfine-tuningcanstill
+proachtoLoRAfine-tuningdesignedspecifically
+belongandheavy. Thus,thefollowingquestionbecomes
+for users with limited computational resources,
+necessary:
+particularly those restricted to standard laptop
+CPUs. Our method learns a meta-operator that Canonegeneratenewlow-rankadapterstofine-tunelarge
+mapsanyinputdataset,representedasaprobabil- languagemodelsonnewtaskswithouttheneedforGPUs?
+itydistribution,toasetofLoRAweightsbylever-
+Weaddressthisconcernbyintroducingazero-shotLoRA
+agingalargebankofpre-trainedadaptersforthe
+meta-generationprocedureaimedatCPU-onlyusers. Our
+Mistral-7B-Instruct-v0.2 model. Instead of per-
+approachtakesnoveldatasets,eachpotentiallycontaining
+formingnewgradient-basedupdates,ourpipeline
+a variable number of instances, as input. It then outputs
+constructsadaptersvialightweightcombinations
+LoRAweightsforapre-trainedLLM,wheretheprediction
+ofexistingLoRAsdirectlyonCPU.Whilethere-
+reliesonacombinationofinstancesfromanexistingbank
+sultingadaptersdonotmatchtheperformanceof
+ofLoRAs(Gabrielssonetal.,2024). Importantly,theway
+GPU-trainedcounterparts,theyconsistentlyout-
+inwhichthesecombinationsareperformedislightweight
+performthebaseMistralmodelondownstream
+enoughtobecomputableonastandardcontemporaryCPU
+tasks,offeringapracticalandaccessiblealterna-
+inafewminutes(seeTable2inAppendixC),withnoneed
+tivetotraditionalGPU-basedfine-tuning.
+forGPUclusters.
+1.Introduction Main Contribution Our principled LoRA meta-
+generationpipelineprovideslightweight,“cheap”LoRAs
+Asmodelsanddatasetsscaleup,fullfine-tuningbecomes thatapproachtheperformanceofGPU-fine-tunedmodels
+increasinglyunrealisticformostpractitioners. Thelargest (which are often inaccessible to many) and outperform
+foundationmodels—oftenbuiltbytechgiantswithalmost the base “non-finetuned” model. These contributions are
+unlimited compute (Touvron et al., 2023; OpenAI, 2023; theoretically grounded in Proposition 1 and Theorem 1.
+Bai et al., 2023; Qwen et al., 2025; DeepSeek-AI et al., Together, these demonstrate that, with high probability,
+2025)—canhavehundredsofbillionsofparameters,making a ReLU Multi-Layer Perceptron (MLP) architecture,
+traditionalfine-tuningforindividualsprohibitivelyexpen- designed to run efficiently on a CPU, can identify the
+sive. Parameter-efficientfine-tuning(PEFT)methods(He optimal coefficients for combining existing LoRAs.
+These optimal LoRA mixture coefficients, as defined
+1DepartmentofMathematics, McMasterUniversity, Hamil-
+in (3) (representing a weighted sum of pre-trained LoRA
+ton, Canada 2Vector Institute, Toronto, Canada 3University
+of Oxford, Oxford, United Kingdom. Correspondence to: parameters), are determined based on the given dataset
+Reza Arabpour <arabpour@mcmaster.ca>, Anastasis Krat- alignmentfeatures. Thisprocesseffectivelyminimizesthe
+sios <kratsioa@mcmaster.ca>, Haitz Sáez de Ocáriz Borde downstreamtaskloss,whichquantifiesthemodel’serroron
+<chri6704@ox.ac.uk>.
+new, specifictasks. Additionally, ourworkalsoprovides
+nearly-optimalclosed-formsolutionsthroughlightweight,
+Proceedingsofthe42nd InternationalConferenceonMachine
+Learning,Vancouver,Canada.PMLR267,2025.Copyright2025 neural network-free alternatives (e.g., the Attentional or
+bytheauthor(s). Normalized approaches). Interestingly, our experiments
+1
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+revealthattheneuralnetwork-freevariantsofourpipeline 3.Preliminaries
+performcomparablytothetheoreticallynear-optimalneural
+DatasetsasProbabilityDistributions Todescribeour
+networksolution(theMLP-basedapproach).
+pipeline,wefirstneedaunifiedframeworkfordatasetswith
+Section 2 provides a discussion of related work concern- avaryingnumberofinstances. Assuch,wefixdimensions
+ingLoRA.Weintroducethepreliminariesforformalizing d,D ∈N . GivenourtrainingdatasetsD ,...,D ⊂X
++ 1 N
+datasetsasprobabilitydistributionsinSection3. Section4 forsome(non-empty)compactinputdomainX ⊆ Rd+D
+presentsourLoRAgenerationpipelines. Theirrespective corresponding to one of N possible down-stream tasks
+theoretical guarantees are later detailed in Section 5, and T ,...,T which our Transformer model (Mistral-7B-
+1 N
+experimentallyvalidatedinSection6. Instruct-v0.2)f :Rd →RD,whoseparametersθ ∈Rplie
+θ
+inap≫0dimensionalEuclideanparameterspace. Since
+2.RelatedWork theentriesofeachdatasetarepermutation-invariant,then,
+followingthesyntheticdatagenerationliterature,e.g.(Za-
+Sinceitsintroduction,theutilityofLoRA(Huetal.,2021) manlooyetal.,2024),itisnaturaltorepresenteachdataset
+has expanded significantly beyond classical LLM post- D asanempiricaldistribution(probabilitymeasure)via
+n
+trainingandlanguage. Itisnowemployedindiversefields
+such as vision language models (Li et al., 2023) and vi-
+1 (cid:88)
+sion Transformers (Dong et al., 2023). LoRA has also P Dn = N δ (x,y) (1)
+proven valuable in image generative modeling for rapid m (x,y)∈Dm
+StableDiffusionfine-tuningandpersonalization(Rombach
+etal.,2022;Galetal.,2022;Ruizetal.,2022;Roichetal.,
+o (cid:80)n Nt mhe wdom
+δ
+ain X ww ih there
+w
+N
+m
+==def. 1# /ND n; foi r.e e. acP
+hDn
+m
+=
+=
+2022), and for score distillation (Wang et al., 2023), al- m=1 m (xm,ym) m m
+1,...,N . The support of the measure P , namely,
+thoughmoreprincipledLoRA-freemethodshaverecently
+m Dn
+{(x ,y ),...,(x ,y )}representinstancesinD andthe
+1 1 m m n
+emerged(Lukoianovetal.,2024). Itsapplicationevenex-
+weightsw ∈[0,1]sumto1,i.e.wbelongstotheN sim-
+m m
+t ie nn gd rs eit no ffi on rce e- mtu en nin tg leb aa rs ne inm go (d We als ni gnt eo tare l.a ,s 2o 0n 2in 5g ),m ano dde inls tu hs e- plex∆ Nm=def.{u∈[0,1]Nm : (cid:80)N i=m
+1
+u
+i
+=1},andrepresent
+therelativefrequencyofinstanceofdata-pointinD . We
+developmentofnewadaptersforGraphNeuralNetworks m
+denotethesetofprobabilitymeasuresonX byP(X).
+andGraphTransformers(Papageorgiouetal.,2025).
+Pipeline Inputs and Distributional Alignment Scores
+Alongside this expanding applicability, numerous LoRA
+Wethenchooseadata-similarityscorewhereρ:P(X)×
+variantshaveemerged,oftenaimingtofurtherreducecom-
+P(X) → [0,∞]. For this, we choose a (dis)similarity
+putationaloverhead. Forinstance,quantizationoffersaway
+metric between probability distributions (measures) on
+tolowermemoryconsumptionbothduringtraining(Gho-
+X, e.g.aninformation-theoreticdivergencesuchasKull-
+lamietal.,2021;Dettmersetal.,2023;Guoetal.,2024)
+back Leibler (KL) divergence or a metric such as the 1-
+and after (Yadav et al., 2023). The number of trainable
+Wasserstein distance W . This dissimilarity score then
+parameterscanalsobereducedthroughadaptiverankallo- 1
+allows us to extract alignment scores between any new
+cation(Zhangetal.,2023).Furtherinspiredbyideasaround
+dataset D (encoded as a probability measure P on the
+weightorprojectionreuse(FrankleandCarbin,2018;Ra- D
+data-domainX)andeverydataset(D )N inourdatabase
+manujanetal.,2020),strategiestodecreasetrainableLoRA n n=1
+viaalign:P(X)→∆
+parameters include learning diagonal rescaling of frozen N
+randomBandAmatrices(VeRA)(Kopiczkoetal.,2024), align(P D)=def. Softmax(cid:0) (ρ(P D,P Dn)N n=1(cid:1) . (2)
+derivingBandAfromtheSVDofthepre-trainedW and
+0 Oncethe(softmax-normalized)alignmentscoresarecom-
+optimizing a smaller matrix in the resulting space (SVD-
+puted,theyarepassedtoanetwork,hereinour“proofof
+iff)(Hanetal.,2023),learningalinearcombinationoffixed
+concept” we use a simple MLP (trained on CPU), which
+randommatrices(NOLA)(Koohpayeganietal.,2023),and
+yieldsasetofmixtureweightsW ∈∆ . Thesemixture
+fine-tuning with orthogonal matrices (BOFT) (Liu et al., D N
+weights are then used to combine the pre-trained LoRA
+2024). LoRAs have also been explored from a more the-
+weights θ ,...,θ , from out database. Note that each
+oreticalviewpoint(ZengandLee,2024;Zhuetal.,2024; 1 N
+LoRAweightθ wasspecializedfortaskT andpre-trained
+Kratsiosetal.,2025). n n
+ondatasetD . Theoutputofourmodelisthussimplythe
+n
+NotethatourfocushereisonLoRAgenerationonCPU, mixtureofLoRAs
+N
+whichnoneoftheaforementionedworksexplore.Wewould (cid:88)
+D (cid:55)→P (cid:55)→ W θ (3)
+liketoreiteratethatallourpipelines,includingthoseusing D D n
+n=1
+artificialneuralnetworkscanbetrainedsolelyusingCPUs.
+andliesintheconvexhullofthepre-trainedLoRAweights
+θ ,...,θ intheparameterspaceRp. Therefore,weonly
+1 N
+2
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+needtolearn(orcompute,aswewillseeinSection4)the 4.3.CheapNearly-OptimalLoRAs: NeuralApproach
+mappingin(3). BasedonthisweareabletoobtainLoRA
+Ourneuralapproachinjectsnon-linearflexibilityintohow
+weightswithnofine-tuning,directlyout-of-the-box.
+the distances are mapped to the LoRA alignment scores
+in(4)usingadeeplearningmodelC :D →co(∆θ);inthis
+4.LoRAGenerationPipelinesforCPU
+paper,thiswillalwaysbeanMLP.Thisallowsourcheap
+LoRAapproachtolearnhowtodetectandaligncomplicated
+We now mathematically formalize our end-to-end cheap
+non-linearalignmentsbetweenthenewdatasetandthose
+LoRA pipelines. Further detailson how thesewere prac-
+definingeachpre-trainedtask. Thisneuralapproachthus
+tically implemented can be found in Appendix C.1. Our
+sendsanydatasetDtothefollowingmixtureofLoRAs
+maintheoreticalguarantee(Theorem1)isgeneralenough
+toapplynotonlytoLoRAsfedintotransformersbutalso
+tonearlyanymixture-of-expert-basedparameterprediction
+C(D)=def. [softmin◦fˆ◦align(D)]⊤(∆θ 1,...,∆θ K)
+(5)
+(cid:124) (cid:123)(cid:122) (cid:125)(cid:124) (cid:123)(cid:122) (cid:125)
+pipeline. Neural-LoRAAlignmentScores Pre-TrainedLoRAs
+wherefˆ:RK →RK isanMLPwithactivationfunctionς,
+4.1.Setup
+andwewritealign(D)inplaceofalign(P )understanding
+D
+Let d,D ∈ N +. Let ℓ : RD × RD → [0,∞) be Lips- thecorrespondenceD →P
+D
+asimplicit.
+chitz. Letf :Rp×Rd →RD bealocally-Lipschitzmodel,
+mapping the parameters θ ∈ Rp and an input x ∈ Rd to
+5.TheoreticalGuarantees
+an output f (x) ∈ RD. Also, We are given a pre-trained
+θ
+model θ 0 ∈ Rp. Purely for simplicity, we consider the Wenowprovideguaranteesontheoptimalityofbothour
+standardizeddata-domainX =[0,1]d+D. Following(Roth- mainapproaches. Wealsodemonstratetheexistenceofan
+fuss et al., 2023). We henceforth fix a task distribution oracleoptimizer,yieldingthebestpossibleLoRAiftheuser
+P∈P(S)quantifyingtheprobabilityofselectinganyone
+hadaccesstocompleteinformationonthetaskdistribution.
+dataset in S at random. We consider a metric space of
+datasetsD ⊆P([0,1]d+D)metrizedbyρ,wherethetopol- 5.1.AttentionalApproach
+ogygeneratedbyρisnocoarserthanthetopologyofconver-
+Ourcheapestout-of-the-boxLoRApipeline(4)areoptimal
+genceindistribution. WefixaK ∈N datasetspairedwith
++ inaPAC-Bayesiansenseof(Alquieretal.,2016).
+“fine-tuned”modelparameters(D ,∆θ ),...(D ,∆θ )
+1 1 K K
+inD×Rp. Let Proposition 1 (Existence: OptimalOraclesforFine-Tuning).
+ForeveryK ∈ N and{(D ,∆θ )}K ⊂ D×Rp with
++ k k k=1
+K eachD finiteandnon-empty. Foreveryα > 0andeach
+co(∆θ)=def.{ϑ∈Rp : (∃w∈∆ K)ϑ=(cid:88) w k∆θ K} datasetk
+D ∈D,theLoRAAlignmentScoresin(4)satisfy
+k=1
+1 (cid:88)K 1 (cid:88)K
+where∆ K=def.{w ∈[0,1]K : (cid:80)K
+k=1
+w
+k
+=1}. (cid:124)so Lf ot Rm AAin lig◦ (cid:123) nm(cid:122)a el ni tg Sn co( rD es(cid:125))∈argmin w∈∆k (cid:124)K k=1w (cid:123)k (cid:122)ρ(D,Dk (cid:125))+ (cid:124)α k=1w (cid:123)k (cid:122)log(wk (cid:125))
+DatasetAlignment EntropicPenalty
+4.2.Very-CheapLoRAs: AttentionalApproach
+Proof. SeeAppendixB.1.
+Considerthefollowingapproachwhichmapsanynewin-
+comingdatasetDtothefollowingmixtureofLoRAs
+5.2.NeuralApproach
+C Att(D)=def. [softmin◦align(D)]⊤(∆θ 1,...,∆θ K) (4) Theattentionalpipeline,in(4),onlychecksforthealign-
+(cid:124) (cid:123)(cid:122) (cid:125)(cid:124) (cid:123)(cid:122) (cid:125) mentofadatasetwiththedatasetspreviouslyusedfortrain-
+LoRAAlignmentScores Pre-TrainedLoRAs
+ingtheadaptersinthebank.Incontrastourneuralapproach,
+in(5),optimizesforthedownstreamperformanceofthepre-
+Werefertothepipelinein(4)asourattentionalapproach
+dictedmixtureofLoRAexperts. Surprisingly,atleasttheo-
+sincethedatasetD ,...,D playasimilarroletothekeys
+1 K retically,oneonlyneedsasmallMLPbetweenthedistance
+inattentionmechanisms(Vaswanietal.,2017). TheLoRA
+vectorandsoftminnormalizationlayerstoperformthisout-
+alignmentscoresin(4)areanalogoustocontextualalign-
+of-the-box downstream (near) optimal LoRA generation.
+mentscores,andthepre-trainedLoRAparametersplaya
+Ourfirstguaranteefortheneuralapproachdemonstratesthe
+similarroletothevaluematricesin(Vaswanietal.,2017).
+existenceofamap,i.e.,anoraclepredictor,whichreturns
+Thesoftminisusedinsteadofasoftmaxsincemaximaldis-
+thebestpossibledownstreamoptimization.
+tancealignmenthappenswhentwodatasetshaveadistance
+of0fromoneanother, notsomearbitrarilylargenumber. Proposition 2 (Existence: OptimalOraclesforFine-Tuning).
+Weexamineanormalizedversionofdistancevector(4)in ForeverydatasetD ∈Dthereexistsanoracleparameter
+ϑ⋆ ∈co(∆θ)satisfying
+ourexperiments,seeAppendixC.1.4fordetails.
+3
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+E (X,Y)∼D(cid:104) ℓ(fθ+ϑ⋆(X),Y)(cid:105) = inf E (X,Y)∼D(cid:104) ℓ(fθ+∆θ(X),Y)(cid:105) . technicaldetailsregardingtheimplementationareprovided
+(cid:124) Orac(cid:123) le(cid:122) Error (cid:125) ∆ (cid:124)θ∈co(∆θ) Optim(cid:123) a(cid:122) lError (cid:125) inAppendixC.
+Ourexperimentalsetuphighlightedakeydistinctioninre-
+Proof. SeeAppendixB.2. source usage: the actual computation and adaptation of
+theLoRAadapterswereperformedexclusivelyontheCPU.
+Ournextandmainresultsshowthatourpipelinecanimple-
+GPUs,however,wereessentialonlyfortheevaluationphase.
+menttheoptimaldownstreammixtureofLoRApredictors
+This is because each adapted LLM, after being modified
+to achieve precision. Our result only relies on one struc-
+byourpipeline,neededtobeloadedontoaGPUtogener-
+tural regularity condition on our data, guaranteeing that:
+ateoutputsonitsrespectivetestset. Tothoroughlyassess
+theinverseproblemofrecordingadataset/measurefromits
+theperformanceofeachapproach-distance(ordivergence)
+distancemeasurementstotheavailabledatasets/measuresis
+metricpairing,weexecutedtheentirepipelinetwelvetimes
+possible. Effectively,thismeansthatthemetricdimension,
+foreachofthe502datasets. Thisexhaustiveprocesscov-
+inthegraph-theoreticsense(see(Tillquistetal.,2023)for
+eredeveryuniquecombinationofapproachesanddistance
+details),ofthespaceDisexactlyK.
+metrics. Followingthegenerationofoutputs,theRouge-L
+Assumption 1 (Well-Posed Inverse Problem). Let (D,ρ) scorewascalculatedforthetestsetofeachdataset,andthe
+becompactandsupposethatρmetrizestheweaktopology reportedvaluesreflecttheaverageofthesescoresacrossall
+(convergence in distribution) on D. We require that: the runs.
+mapalign:D →[0,∞)K injectivelymapsanyD ∈Dto
+6.1.PerformanceComparisonandAnalysis
+(cid:0) (cid:1)K
+align(D)=def. ρ(D,D k) k=1.
+Ourworkisbenchmarkedagainsttwokeyperformanceindi-
+Theorem1(ε-OptimalCheapFine-tuning). Letς :R→R cators. First,theperformanceofthebasefoundationmodel
+withoutanyfine-tuning,representingascenariowherean
+be a Lipschitz activation function which is differentiable
+end-user with limited computational resources applies a
+withnon-zeroderivativeatleastonpoint. Forevery0 <
+ε ≤ 1, there is a MLP C : RK → RK with activation foundationmodeltoanewdataset: thisyieldedanaverage
+and standard deviation Rouge-L score of 0.192 ± 0.181.
+functionς suchthattheϵ-optimalselectionproperty:
+Second, we compare against the performance of a GPU-
+(cid:104) (cid:105) (cid:104) (cid:105) fine-tuned model, achieved without hardware limitations,
+E (X,Y)∼D ℓ(fθ+C(D)(X),Y) ≤ inf E (X,Y)∼D ℓ(fθ+∆θ(X),Y) +ε
+(cid:124) CheapF(cid:123) in(cid:122) e-Tuning (cid:125) ∆ (cid:124)θ∈co(∆θ) Fine-Tur(cid:123) ni(cid:122) ngOracle (cid:125) 1wh pi rc eh seo nb tsta ti hn eed ava en raR go eu ag ne d-L sts ac no dre aro df d0 e. v7 i4 a6 ti± on0 o.2 f6 R5 o. uT ga eb -l Le
+holdswithP-probabilityat-least1−ε. performanceforallapproachesacrossthefourdistance(or
+divergence)metricsonthedownstreamtask.
+Proof. SeeAppendixB.2.
+TheJSdivergence-basedNormalizedapproachachievedthe
+highestscore,withanaverageRouge-Lof0.520.Thisrepre-
+6.ExperimentalResults sentsanimprovementof0.328overthebasemodel’sscore
+of0.192. ItisworthmentioningthatevenourAttentional
+A comprehensive evaluation was conducted to assess the
+approach,despiteitssimplicity,significantlyoutperforms
+performanceofthreedistinctapproaches(Attentional,Nor-
+thebasefoundationmodelacrossalldistancemetrics. In-
+malized,andNeural)inconjunctionwithfourestablished
+terestingly,theneuralapproachdoesnotseemtojustifythe
+distance metrics (or divergences): Wasserstein Distance
+additionalcomputationalcost,asitsperformanceimprove-
+(WD),Kullback–Leibler(KL)divergence,Jensen-Shannon
+ment over the Attentional and Normalized approaches is
+(JS)divergence,andMaximumMeanDiscrepancy(MMD).
+generallyminimalorevenworse.
+Thisevaluationaimedtosystematicallycomparetheoutputs
+generatedbyeachcombinationofapproachandmetric. The
+primaryevaluationcriterionforthequalityofthegenerated
+Table1. PerformanceofourcheapLoRApipelines.
+adapters was Rouge-L, a metric ranging from 0 to 1 that
+quantifies similarity based on the overlap of the longest Approach WD KL JS MMD
+common subsequences between generated and reference Attentional 0.426 0.501 0.486 0.486
+outputs (Lin, 2004). We also include Exact Match (EM) (std.dev.) (±0.290) (±0.272) (±0.270) (±0.270)
+resultsinAppendixD.1. Normalized 0.495 0.488 0.520 0.497
+(std.dev.) (±0.267) (±0.269) (±0.277) (±0.269)
+OurexperimentalsetuputilizedtheMistral-7B-Instruct-v0.2
+Neural 0.494 0.482 0.484 0.493
+model(Jiangetal.,2023)andadatasetcomprising502En-
+(std.dev.) (±0.265) (±0.268) (±0.272) (±0.270)
+glishdataset-adapterpairssourcedfromtheLots-of-LoRAs
+HuggingFacerepository(Gabrielssonetal.,2024). Further
+4
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+7.Conclusion YangYao,BowenYu,HongyiYuan,ZhengYuan,Jian-
+wei Zhang, Xingxuan Zhang, Yichang Zhang, Zhenru
+In conclusion, our work presents a practical, simple, and
+Zhang,ChangZhou,JingrenZhou,XiaohuanZhou,and
+theoreticallysupportedpipelineforgeneratingLoRAssuit-
+Tianhang Zhu. Qwen technical report, 2023. URL
+ableforfine-tuningLLMsusingonlyaCPU.Thispipeline
+https://arxiv.org/abs/2309.16609.
+significantlyreducesthetypicallyrequiredcomputational
+demands,makingfine-tuningaccessibleeventouserswith Qwen,:,AnYang,BaosongYang,BeichenZhang,Binyuan
+limitedhardwareresourcesoronedgedeviceswithprivacy Hui,BoZheng,BowenYu,ChengyuanLi,DayihengLiu,
+constraints. FeiHuang,HaoranWei,HuanLin,JianYang,Jianhong
+Tu, Jianwei Zhang, Jianxin Yang, Jiaxi Yang, Jingren
+WeprovedtheexistenceofalightweightReLUMLPback-
+Zhou,JunyangLin,KaiDang,KemingLu,KeqinBao,
+bone, runnable on a CPU, that can reliably approximate
+KexinYang,LeYu,MeiLi,MingfengXue,PeiZhang,
+optimal LoRA adapter weights and biases, thereby effec-
+QinZhu,RuiMen,RunjiLin,TianhaoLi,TianyiTang,
+tivelyminimizingdownstreamtasklossinTheorem1. Sur-
+TingyuXia,XingzhangRen,XuanchengRen,YangFan,
+prisingly,thesimplestversionsofourpipeline(Attentional
+YangSu, YichangZhang, YuWan, YuqiongLiu, Zeyu
+andNormalized)achievedperformancematchingthatofthe
+Cui,ZhenruZhang,andZihanQiu.Qwen2.5technicalre-
+MLPbackboneversion,furtherdemonstratingtheefficiency
+port,2025.URLhttps://arxiv.org/abs/2412.
+andpowerofourapproach.
+15115.
+Ourexperiments,usingtheMistral-7B-Instruct-v0.2model
+DeepSeek-AI, Aixin Liu, Bei Feng, Bing Xue, Bingx-
+on502diversedatasets,demonstratesubstantialimprove-
+uanWang,BochaoWu,ChengdaLu,ChenggangZhao,
+mentsoverthebaselinemodel,withthebestconfiguration
+Chengqi Deng, Chenyu Zhang, Chong Ruan, Damai
+achievinga0.328increaseinperformance(Rouge-Lscore)
+Dai, Daya Guo, Dejian Yang, Deli Chen, Dongjie Ji,
+overthebasemodel,bridgingmorethanhalfoftheperfor-
+ErhangLi,FangyunLin,FucongDai,FuliLuo,Guangbo
+mancegapbetweenthebasemodelandtheGPUfine-tuned
+Hao, Guanting Chen, Guowei Li, H. Zhang, Han Bao,
+reference. While our CPU-generated adapters do not yet
+HanweiXu,HaochengWang,HaoweiZhang,Honghui
+matchtheperformanceofGPU-trainedadapters,theypro-
+Ding, HuajianXin, HuazuoGao, HuiLi, HuiQu, J.L.
+videacompellingalternativeinresource-limitedsettings.
+Cai, Jian Liang, Jianzhong Guo, Jiaqi Ni, Jiashi Li, Ji-
+Future work could explore the applicability of these ap- aweiWang,JinChen,JingchangChen,JingyangYuan,
+proachestootherlanguagemodelsasmoreLoRAadapter Junjie Qiu, Junlong Li, Junxiao Song, Kai Dong, Kai
+banksbecomeopen-source,aswellastotasksbeyondNLP. Hu, Kaige Gao, Kang Guan, Kexin Huang, Kuai Yu,
+Likewise,itwouldbeofinteresttobetterunderstandhow Lean Wang, Lecong Zhang, Lei Xu, Leyi Xia, Liang
+manyLoRAadapterswouldberequiredtogeneratenew, Zhao, Litong Wang, Liyue Zhang, Meng Li, Miaojun
+high-qualityadapters—thatis,whatsizeofbankisneces- Wang, Mingchuan Zhang, Minghua Zhang, Minghui
+sary. We expect this to depend on the task, data modali- Tang, Mingming Li, Ning Tian, Panpan Huang, Peiyi
+ties,andpossiblyeventhemodelarchitecture. Finally,our Wang,PengZhang,QianchengWang,QihaoZhu,Qinyu
+methodcouldalsopotentiallybeusedforLoRAinitializa- Chen,QiushiDu,R.J.Chen,R.L.Jin,RuiqiGe,Ruisong
+tion(pre-heating)beforefine-tuningonGPU. Zhang, Ruizhe Pan, Runji Wang, Runxin Xu, Ruoyu
+Zhang, Ruyi Chen, S. S. Li, Shanghao Lu, Shangyan
+References Zhou, Shanhuang Chen, Shaoqing Wu, Shengfeng Ye,
+ShengfengYe,ShirongMa,ShiyuWang,ShuangZhou,
+Hugo Touvron et al. Llama: Open and efficient founda-
+Shuiping Yu, Shunfeng Zhou, Shuting Pan, T. Wang,
+tionlanguagemodels. arXivpreprintarXiv:2302.13971,
+TaoYun,TianPei,TianyuSun,W.L.Xiao,Wangding
+2023.
+Zeng,WanjiaZhao,WeiAn,WenLiu,WenfengLiang,
+WenjunGao,WenqinYu,WentaoZhang,X.Q.Li,Xi-
+OpenAI. Gpt-4technicalreport,2023. Availableathttps:
+angyueJin, XianzuWang, XiaoBi, XiaodongLiu, Xi-
+//openai.com/research/gpt-4.
+aohanWang,XiaojinShen,XiaokangChen,Xiaokang
+Jinze Bai, Shuai Bai, Yunfei Chu, Zeyu Cui, Kai Dang, Zhang, Xiaosha Chen, Xiaotao Nie, Xiaowen Sun, Xi-
+Xiaodong Deng, Yang Fan, Wenbin Ge, Yu Han, Fei aoxiangWang,XinCheng,XinLiu,XinXie,Xingchao
+Huang,BinyuanHui,LuoJi,MeiLi,JunyangLin,Runji Liu,XingkaiYu,XinnanSong,XinxiaShan,XinyiZhou,
+Lin, Dayiheng Liu, Gao Liu, Chengqiang Lu, Keming Xinyu Yang, Xinyuan Li, Xuecheng Su, Xuheng Lin,
+Lu,JianxinMa,RuiMen,XingzhangRen,Xuancheng Y.K.Li,Y.Q.Wang,Y.X.Wei,Y.X.Zhu,YangZhang,
+Ren,ChuanqiTan,SinanTan,JianhongTu,PengWang, YanhongXu,YanhongXu,YanpingHuang,YaoLi,Yao
+ShijieWang,WeiWang,ShengguangWu,BenfengXu, Zhao, Yaofeng Sun, Yaohui Li, Yaohui Wang, Yi Yu,
+JinXu,AnYang,HaoYang,JianYang,ShushengYang, YiZheng,YichaoZhang,YifanShi,YiliangXiong,Ying
+5
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+He, Ying Tang, Yishi Piao, Yisong Wang, Yixuan Tan, Rickard Brüel Gabrielsson, Jiacheng Zhu, Onkar Bhard-
+YiyangMa,YiyuanLiu,YongqiangGuo,YuWu,Yuan waj, Leshem Choshen, Kristjan Greenewald, Mikhail
+Ou,YuchenZhu,YuduanWang,YueGong,YuhengZou, Yurochkin, and Justin Solomon. Compress then serve:
+YujiaHe,YukunZha,YunfanXiong,YunxianMa,Yuting ServingthousandsofloRAadapterswithlittleoverhead,
+Yan, Yuxiang Luo, Yuxiang You, Yuxuan Liu, Yuyang 2024. URLhttps://openreview.net/forum?
+Zhou,Z.F.Wu,Z.Z.Ren,ZehuiRen,ZhangliSha,Zhe id=hHNVn4hFPk.
+Fu, ZheanXu, ZhenHuang, ZhenZhang, ZhendaXie,
+Xin Li, Dongze Lian, Zhihe Lu, Jiawang Bai, Zhibo
+ZhengyanZhang,ZhewenHao,ZhibinGou,Zhicheng
+Chen,andXinchaoWang. Graphadapter: Tuningvision-
+Ma,ZhigangYan,ZhihongShao,ZhipengXu,ZhiyuWu,
+language models with dual knowledge graph. In Ad-
+ZhongyuZhang,ZhuoshuLi,ZihuiGu,ZijiaZhu,Zijun
+vancesinNeuralInformationProcessingSystems,2023.
+Liu, Zilin Li, Ziwei Xie, Ziyang Song, Ziyi Gao, and
+ZizhengPan. Deepseek-v3technicalreport,2025. URL WeiDong,DaweiYan,ZhijunLin,andPengWang. Effi-
+https://arxiv.org/abs/2412.19437. cientadaptationoflargevisiontransformerviaadapter
+re-composing. InAdvancesinNeuralInformationPro-
+Junxian He, Chunting Zhou, Xuezhe Ma, Taylor Berg-
+cessingSystems,2023.
+Kirkpatrick, and Graham Neubig. Towards a unified
+view of parameter-efficient transfer learning. In In- Robin Rombach, Andreas Blattmann, Dominik Lorenz,
+ternational Conference on Learning Representations, Patrick Esser, and Björn Ommer. High-resolution im-
+2022. URLhttps://openreview.net/forum? agesynthesiswithlatentdiffusionmodels,2022. URL
+id=0RDcd5Axok. https://arxiv.org/abs/2112.10752.
+Jonas Pfeiffer, Andreas Rücklé, Clifton Poth, Aishwarya Rinon Gal, Yuval Alaluf, Yuval Atzmon, Or Patashnik,
+Kamath,IvanVulic´,SebastianRuder,KyunghyunCho, Amit H Bermano, Gal Chechik, and Daniel Cohen-Or.
+and Iryna Gurevych. AdapterHub: A framework for An image is worth one word: Personalizing text-to-
+adaptingtransformers. InQunLiuandDavidSchlangen, imagegenerationusingtextualinversion. arXivpreprint
+editors, Proceedings of the 2020 Conference on Em- arXiv:2208.01618,2022.
+piricalMethodsinNaturalLanguageProcessing: Sys-
+Nataniel Ruiz, Yuanzhen Li, Varun Jampani, Yael Pritch,
+tem Demonstrations, pages 46–54, Online, October
+Michael Rubinstein, and Kfir Aberman. Dreambooth:
+2020. Association for Computational Linguistics. doi:
+Finetuningtext-to-imagediffusionmodelsforsubject-
+10.18653/v1/2020.emnlp-demos.7. URL https://
+driven generation. arXiv preprint arXiv:2208.12242,
+aclanthology.org/2020.emnlp-demos.7.
+2022.
+NingDing,YujiaQin,GuangYang,FuchaoWei,Zonghan
+DanielRoich,RonMokady,AmitHBermano,andDaniel
+Yang,YushengSu,ShengdingHu,YulinChen,Chi-Min
+Cohen-Or. Pivotaltuningforlatent-basededitingofreal
+Chan,WeizeChen,JingYi,WeilinZhao,XiaozhiWang,
+images. ACMTransactionsonGraphics(TOG),42(1):
+Zhiyuan Liu, Hai-Tao Zheng, Jianfei Chen, Yang Liu,
+1–13,2022.
+Jie Tang, Juanzi Li, and Maosong Sun. Delta tuning:
+Acomprehensivestudyofparameterefficientmethods ZhengyiWang,ChengLu,YikaiWang,FanBao,Chongx-
+for pre-trained language models, 2022. URL https: uanLi, HangSu, andJunZhu. Prolificdreamer: High-
+//arxiv.org/abs/2203.06904. fidelityanddiversetext-to-3dgenerationwithvariational
+scoredistillation. InThirty-seventhConferenceonNeu-
+Bruce X.B. Yu, Jianlong Chang, Lingbo Liu, Qi Tian, ralInformationProcessingSystems,2023. URLhttps:
+and Chang Wen Chen. Towards a unified view on vi- //openreview.net/forum?id=ppJuFSOAnM.
+sualparameter-efficienttransferlearning. arXivpreprint
+arXiv:2210.00788,2022. Artem Lukoianov, Haitz Sáez de Ocáriz Borde, Kristjan
+Greenewald,VitorCampagnoloGuizilini,TimurBagaut-
+ZeyuHan,ChaoGao,JinyangLiu,JeffZhang,andSaiQian dinov,VincentSitzmann,andJustinSolomon. Scoredis-
+Zhang. Parameter-efficientfine-tuningforlargemodels: tillationviareparametrizedDDIM. InTheThirty-eighth
+Acomprehensivesurvey,2024.URLhttps://arxiv. Annual Conference on Neural Information Processing
+org/abs/2403.14608. Systems,2024. URLhttps://openreview.net/
+forum?id=4DcpFagQ9e.
+EdwardJ.Hu,YelongShen,PhillipWallis,ZeyuanAllen-
+Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Shangshang Wang, Julian Asilis, Ömer Faruk Akgül,
+Chen. Lora: Low-rankadaptationoflargelanguagemod- Enes Burak Bilgin, Ollie Liu, and Willie Neiswanger.
+els. 2021. URLhttps://arxiv.org/abs/2106. Tina: Tiny reasoning models via lora, 2025. URL
+09685. https://arxiv.org/abs/2504.15777.
+6
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+PantelisPapageorgiou,HaitzSáezdeOcárizBorde,Anasta- Weiyang Liu, Zeju Qiu, Yao Feng, Yuliang Xiu, Yuxuan
+sisKratsios,andMichaelM.Bronstein. Graphlow-rank Xue,LonghuiYu,HaiwenFeng,ZhenLiu,JuyeonHeo,
+adaptersofhighregularityforgraphneuralnetworksand SongyouPeng,YandongWen,MichaelJ.Black,Adrian
+graphtransformers. InFirstWorkshoponScalableOpti- Weller,andBernhardSchölkopf. Parameter-efficientor-
+mizationforEfficientandAdaptiveFoundationModels, thogonalfinetuningviabutterflyfactorization. InICLR,
+2025. URLhttps://openreview.net/forum? 2024.
+id=gxhZj6uvFC.
+YuchenZengandKangwookLee. Theexpressivepowerof
+Amir Gholami, Sehoon Kim, Zhen Dong, Zhewei Yao, low-rankadaptation. InTheTwelfthInternationalConfer-
+Michael W. Mahoney, and Kurt Keutzer. A survey of enceonLearningRepresentations,2024. URLhttps:
+quantizationmethodsforefficientneuralnetworkinfer- //openreview.net/forum?id=likXVjmh3E.
+ence,2021.
+Jiacheng Zhu, Kristjan Greenewald, Kimia Nadjahi,
+Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and
+Haitz Sáez De Ocáriz Borde, Rickard Brüel Gabriels-
+Luke Zettlemoyer. Qlora: Efficient finetuning
+son, Leshem Choshen, Marzyeh Ghassemi, Mikhail
+of quantized llms. ArXiv, abs/2305.14314, 2023.
+Yurochkin,andJustinSolomon. Asymmetryinlow-rank
+URL https://api.semanticscholar.org/
+adaptersoffoundationmodels.InProceedingsofthe41st
+CorpusID:258841328.
+International Conference on Machine Learning, pages
+62369–62385,2024.
+HanGuo,PhilipGreengard,EricP.Xing,andYoonKim.
+Lq-lora: Low-rankplusquantizedmatrixdecomposition
+AnastasisKratsios,TinSumCheng,AurelienLucchi,and
+forefficientlanguagemodelfinetuning,2024.
+HaitzSáezdeOcárizBorde. Sharpgeneralizationbounds
+Prateek Yadav, Leshem Choshen, Colin Raffel, and Mo- forfoundationmodelswithasymmetricrandomizedlow-
+hitBansal. Compeft: Compressionforcommunicating rank adapters, 2025. URL https://arxiv.org/
+parameterefficientupdatesviasparsificationandquanti- abs/2506.14530.
+zation. arXivpreprintarXiv:2311.13171,2023.
+BehnooshZamanlooy,MarioDiaz,andShahabAsoodeh.
+QingruZhang,MinshuoChen,AlexanderBukharin,Nikos Locallyprivatesamplingwithpublicdata. arXivpreprint
+Karampatziakis,PengchengHe,YuCheng,WeizhuChen, arXiv:2411.08791,2024.
+andTuoZhao. Adalora: Adaptivebudgetallocationfor
+parameter-efficientfine-tuning,2023. JonasRothfuss,MartinJosifoski,VincentFortuin,andAn-
+dreasKrause. Scalablepac-bayesianmeta-learningvia
+Jonathan Frankle and Michael Carbin. The lottery ticket
+thepac-optimalhyper-posterior: fromtheorytopractice.
+hypothesis: Finding sparse, trainable neural networks,
+TheJournalofMachineLearningResearch,24(1):18474–
+2018.
+18535,2023.
+VivekRamanujan,MitchellWortsman,AniruddhaKemb-
+AshishVaswani,NoamShazeer,NikiParmar,JakobUszko-
+havi, Ali Farhadi, and Mohammad Rastegari. What’s
+reit, LlionJones, AidanNGomez, ŁukaszKaiser, and
+hidden in a randomly weighted neural network? In
+IlliaPolosukhin. Attentionisallyouneed. Advancesin
+2020 IEEE/CVF Conference on Computer Vision and
+neuralinformationprocessingsystems,30,2017.
+Pattern Recognition (CVPR). IEEE, June 2020. doi:
+10.1109/cvpr42600.2020.01191. URL http://dx.
+PierreAlquier, JamesRidgway, andNicolasChopin. On
+doi.org/10.1109/CVPR42600.2020.01191.
+thepropertiesofvariationalapproximationsofgibbspos-
+teriors. JournalofMachineLearningResearch,17(236):
+Dawid J. Kopiczko, Tijmen Blankevoort, and Yuki M.
+1–41,2016.
+Asano. Vera: Vector-based random matrix adaptation,
+2024.
+Richard C Tillquist, Rafael M Frongillo, and Manuel E
+Ligong Han, Yinxiao Li, Han Zhang, Peyman Milanfar, Lladser. Gettingthelayofthelandindiscretespace: A
+Dimitris Metaxas, and Feng Yang. Svdiff: Compact surveyofmetricdimensionanditsapplications. SIAM
+parameterspacefordiffusionfine-tuning. arXivpreprint Review,65(4):919–962,2023.
+arXiv:2303.11305,2023.
+Chin-YewLin. ROUGE:Apackageforautomaticevalu-
+SoroushAbbasiKoohpayegani,KLNavaneet,ParsaNoora- ation of summaries. In Text Summarization Branches
+linejad, Soheil Kolouri, and Hamed Pirsiavash. Nola: Out, pages 74–81, Barcelona, Spain, July 2004. Asso-
+Networksaslinearcombinationoflowrankrandomba- ciation for Computational Linguistics. URL https:
+sis,2023. //www.aclweb.org/anthology/W04-1013.
+7
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+Albert Q. Jiang, Alexandre Sablayrolles, Arthur Mensch, Rickard Brüel Gabrielsson. Lots of loras. https://
+ChrisBamford,DevendraSinghChaplot,Diegodelas huggingface.co/Lots-of-LoRAs,2025.
+Casas, Florian Bressand, Gianna Lengyel, Guillaume
+YizhongWang,SwaroopMishra,PegahAlipoormolabashi,
+Lample, Lucile Saulnier, Lélio Renard Lavaud, Marie-
+YeganehKordi,AmirrezaMirzaei,AnjanaArunkumar,
+Anne Lachaux, Pierre Stock, Teven Le Scao, Thibaut
+ArjunAshok,ArutSelvanDhanasekaran,AtharvaNaik,
+Lavril,ThomasWang,TimothéeLacroix,andWilliamEl
+David Stap, Eshaan Pathak, Giannis Karamanolakis,
+Sayed. Mistral 7b. 2023. URL https://arxiv.
+Haizhi Gary Lai, Ishan Purohit, Ishani Mondal, Jacob
+org/abs/2310.06825.
+Anderson, Kirby Kuznia, Krima Doshi, Maitreya Pa-
+Renjie Wang, Cody Hyndman, and Anastasis Kratsios. tel,KuntalKumarPal,MehradMoradshahi,MihirPar-
+Theentropicmeasuretransform. Canad.J.Statist.,48 mar, Mirali Purohit, Neeraj Varshney, Phani Rohitha
+(1):97–129, 2020. ISSN 0319-5724,1708-945X. doi: Kaza,PulkitVerma,RavsehajSinghPuri,RushangKaria,
+10.1002/cjs.11537. URL https://doi.org/10. ShailajaKeyurSampat,SavanDoshi,SiddharthaMishra,
+1002/cjs.11537. SujanReddy,SumantaPatro,TanayDixit,XudongShen,
+ChittaBaral,YejinChoi,NoahA.Smith,HannanehHa-
+Charalambos D. Aliprantis and Kim C. Border. Infinite jishirzi,andDanielKhashabi. Super-naturalinstructions:
+dimensional analysis. Springer, Berlin, third edition, Generalizationviadeclarativeinstructionson1600+nlp
+2006. ISBN 978-3-540-32696-0; 3-540-32696-0. A tasks. 2022. URL https://arxiv.org/abs/
+hitchhiker’sguide. 2204.07705.
+JamesR.Munkres. Topology. PrenticeHall, Inc., Upper
+Saddle River, NJ, second edition, 2000. ISBN 0-13-
+181629-2.
+Olav Kallenberg. Foundations of modern probability,
+volume 99 of Probability Theory and Stochastic Mod-
+elling. Springer, Cham, third edition, 2021. ISBN
+978-3-030-61871-1;978-3-030-61870-4. doi: 10.1007/
+978-3-030-61871-1. URL https://doi.org/10.
+1007/978-3-030-61871-1.
+AlexanderS.Kechris. Classicaldescriptivesettheory,vol-
+ume 156 of Graduate Texts in Mathematics. Springer-
+Verlag, New York, 1995. ISBN 0-387-94374-9. doi:
+10.1007/978-1-4612-4190-4. URL https://doi.
+org/10.1007/978-1-4612-4190-4.
+Achim Klenke. Probability theory—a comprehensive
+course. Universitext. Springer, Cham, third edition,
+2020. ISBN 978-3-030-56402-5; 978-3-030-56401-
+8. doi: 10.1007/978-3-030-56402-5. URL https:
+//doi.org/10.1007/978-3-030-56402-5.
+J. Dugundji. An extension of Tietze’s theorem. Pa-
+cific J. Math., 1:353–367, 1951. ISSN 0030-
+8730,1945-5844. URL http://projecteuclid.
+org/euclid.pjm/1103052106.
+AnastasisKratsiosandLéoniePapon. Universalapproxima-
+tiontheoremsfordifferentiablegeometricdeeplearning.
+J.Mach.Learn.Res.,23:PaperNo.[196],73,2022.ISSN
+1532-4435,1533-7928.
+PatrickKidgerandTerryLyons. Universalapproximation
+withdeepnarrownetworks. InConferenceonlearning
+theory,pages2306–2327.PMLR,2020.
+8
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+Funding
+A.KratsiosandR.ArabpouracknowledgefinancialsupportfromanNSERCDiscoveryGrantNo.RGPIN-2023-04482and
+No.DGECR-2023-00230. Theyalsoacknowledgethatresourcesusedinpreparingthisresearchwereprovided,inpart,by
+theProvinceofOntario,theGovernmentofCanadathroughCIFAR,andcompaniessponsoringtheVectorInstitute1.
+A.AdditionalBackground
+Thisappendixpresentsanyadditionalbackgroundrequiredfortheformulationofourmainresults,proofsofourguarantees,
+andadditionalexperimentaldetails.
+A.1.FoundationModelFine-tuningandAttentionLayers
+InmodernLLMs,fine-tuningallparameterscanbecomputationallyexpensiveandmemory-intensive. LoRA(Huetal.,
+2021)providesanefficientalternativebyintroducinglow-rankupdatestopre-trainedweightmatrices,particularlyfocusing
+on attention layers in transformer-based models. Given query Q, key K, and value V matrices, the standard attention
+mechanismcomputestheattentionscores
+(cid:18) QK⊤(cid:19)
+Attention(Q,K,V)=softmax √ V, (6)
+d
+k
+whered isthedimensionofthekeysandqueries.
+k
+A.2.Low-RankAdapter(LoRA)Fine-tuning
+Inlargetransformers,theseweightmatricesdominatetheparametercount,makingthemanidealtargetforLoRA’sefficient
+fine-tuning. Byapplyinglow-rankupdatestothesematrices,LoRAachievessignificantsavingsinmemoryandcomputation
+without retraining the entire model. Consider a pre-trained weight matrix W
+0
+∈ Rdout×din, typically representing the
+projectionmatricesintheattentionmechanism. Insteadofupdatingtheentirematrix,LoRAmodifiestheweightsbyadding
+alow-rankperturbation:
+W =W +∆W, (7)
+0
+where∆W isconstrainedtohaverank(∆W)=r ≤min(d ,d ). Toefficientlyparameterize∆W,LoRAdecomposesit
+out in
+as:
+∆W =BA, (8)
+whereB ∈Rdout×r andA∈Rr×din. Duringfine-tuning,theoriginalweightsW 0remainfrozen,andonlytheparameters
+inAandBareoptimized. Intraditionalfullfine-tuning,theentireweightmatrixisupdated,requiringd ·d trainable
+out in
+parameters.Incontrast,theLoRAdecompositionintroducesonlyr·(d +d )trainableparameters,whichismoreefficient
+in out
+whenr ≪min(d ,d ).
+out in
+A.3.DistanceMeasuresbetweenProbabilityDistributions
+Weremindthereaderofthenecessarydefinitionsrequiredinformulatingthedistancebetweendatasets,wheninterpretedas
+finitelysupportedprobabilitymeasures(distributions). GiventwoprobabilitydistributionsP andQdefinedonaseparable
+andcomplete(Polish)metricspaceX equippedwithitsBorelσ-algebraandmetrizedametricρ : X2 → [0,∞),these
+measuresofdiscrepancy(ordivergences)aredefinedasfollows:
+WassersteinDistance(WD). FordistributionsP andQwithcumulativedistributionfunctionsF andF respectively,
+P Q
+the1-Wassersteindistanceisdefinedas:
+(cid:90)
+W 1(P,Q)=def. inf ρ(x,y)π(d(x,y)) (9)
+π (x,y)∈X2
+wheretheinfimumistakenoveralljointprobabilitydistributionsπonX ×X (withtheproductσ-algebra)whosemarginals
+areP andQ.
+1https://vectorinstitute.ai/partnerships/current-partners/
+9
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+Kullback–LeiblerDivergence(KL). TheKLdivergencemeasurestherelativeentropybetweentwodistributions:
+(cid:40)(cid:82)
+log dP(x)P(dx) : ifP ≪Q
+D KL(P ∥Q)=def. x∈X dQ (10)
+∞ : ifP ̸≪Q
+whereP ≪QdenotestheabsolutecontinuityofP withrespecttoQ,and dP denotestheRadon-Nikodymderivative,or
+dQ
+probabilitydensity,ofP withrespecttoQ.
+Jensen–ShannonDivergence(JS). TheJSdivergenceisasymmetrizedversionofKLdivergence:
+1 1
+D (P ∥Q)= D (P ∥M)+ D (Q∥M) (11)
+JS 2 KL 2 KL
+whereM = 1(P +Q).
+2
+MaximumMeanDiscrepancy(MMD). IfHisaReproducingKernelHilbertSpace(RKHS)HoffunctionsoverX with
+reproducingkernelfunctionk;thenwemayalsodefinetheMMDbetweenP andQby
+MMD2(P,Q)=E [k(x,x′)]−2E [k(x,y)]+E [k(y,y′)]. (12)
+x,x′∼P x∼P,y∼Q y,y′∼Q
+IfX isRd andH = L2(Rd)forthestandardGaussianmeasureγ ∼ N(0,I ),thenk isoftenchosentobeaGaussian
+γ d
+kernel,i.e.,k(x,y)=exp(−∥x−y∥2
+).
+2σ2
+B.Proofs
+Wenowprovethemainresultofourpaper. Webeginwiththeproofofoursimplestresult,Proposition1.
+B.1.ProofofProposition1
+ForanydatasetD, notethatargmin 1 (cid:80)K w ρ(D,D )+ 1 (cid:80)K w log(w ). Now, by(Wangetal.,2020,
+w∈∆k K k=1 k k α k=1 k k
+Proposition1)itsuniqueminimizer,whichwedenotebyw⋆,isgivenby
+D
+e−ρ(D,Dk)
+w⋆ = =softmin◦align(D).
+D (cid:80)K e−ρ(D,Di)
+i=1
+B.2.SimultaneousProofofTheorem1andProposition2
+WenowderiveProposition2andTheorem1withinthesameproof,astheirderivationismostnaturallyundertakentogether.
+Step1-ExistenceofaMeasurableSelector
+WewillfirstsetuptheMeasurableMaximumTheorem,seee.g.(AliprantisandBorder,2006,Theorem18.19). Consider
+theconstantcorrespondence
+φ:D
+↠2Rp
+D (cid:55)→co(∆θ).
+Since co(∆θ) is a closed, non-empty, and bounded set then the Heine-Borel theorem implies that co(∆θ) is compact.
+Whenceφisacorrespondencewithnon-empty,compact,andconvexvalues. LetB ⊆DbeaBorelset,then
+(cid:91) (cid:91)
+φ(B)=def. φ(D)= co(∆θ)=co(∆θ). (13)
+D∈B D∈B
+Sinceco(∆θ)iscloseditisBorel;whence,φisnotonlyaweaklymeasurablecorrespondence(AliprantisandBorder,2006,
+18.1Definition(1))butitisalsoaBorelmeasurablecorrespondence(AliprantisandBorder,2006,18.1Definition(3)).
+Thus,thecorrespondenceφsatisfiestherequirementsof(AliprantisandBorder,2006,Theorem18.19).
+10
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+Next,considertheobjectivefunction
+L:D×Rp →[0,∞)
+(14)
+(D,B)(cid:55)→E (cid:2) ℓ(f (X),Y)(cid:3) .
+(X,Y)∼D θ+ϑ
+WewillshowthatLisCarathéodoryfunctionbyshowingitiscontinuous. SinceD×Rpisaproduct(topological)space,
+then (Munkres, 2000, Theorem 19.6) guarantees that f is continuous if and only if each of its component functions is
+continuous;weshowthelatter.
+FixD ∈D. SinceCandthesoftmaxfunctionarelocallyLipschitz,andsinceℓisLipschitz,thentheircompositionislocally
+Lipschitz. Whence,foreach(x,y)∈[0,1]d+D themap
+Λ :co(∆θ))∋ϑ(cid:55)→ℓ(C (x),y))
+x,y θ+ϑ
+isλ-Lipschitz,forsomeλ≥0. ByJensen’sinequalitywehave: foreachϑ ,ϑ ∈co(∆θ)
+1 2
+(cid:12) (cid:12)
+(cid:12)E (cid:2) Λ (ϑ )(cid:3) −E (cid:2) Λ (ϑ )(cid:3)(cid:12)
+(cid:12) (X,Y)∼D X,Y 1 (X,Y)∼D X,Y 2 (cid:12)
+(cid:12) (cid:12)
+=(cid:12)E (cid:2) Λ (ϑ )−Λ (ϑ )(cid:12)
+(cid:12) (X,Y)∼D X,Y 1 X,Y 2 (cid:12)
+≤E (X,Y)∼D(cid:104)(cid:12) (cid:12)Λ X,Y(ϑ 1)−Λ X,Y(ϑ 2)(cid:12) (cid:12)(cid:105)
+≤λE (X,Y)∼D(cid:104)(cid:13) (cid:13)ϑ 1−ϑ 2(cid:13) (cid:13)(cid:105) .
+Thus,LislocallyLipschitzinitssecondargument;inparticular,itiscontinuousinitssecondargument.
+Now,weshowcontinuityinitsfirstargument.Fixϑ∈co(∆θ).Let(D )∞ beasequenceinDconvergingtosomemeasure
+n n=1
+D ∈D. Sincedmetrizesthe(relative)weaktopologyinP([0,1]d+D)relativetoD,thenbyAlexandrov’sPortmanteau
+Theorem,seee.g.(Kallenberg,2021,Theorem5.25),foreverycontinuousandboundedfunctiong ∈C ([0,1]d+D)wehave
+b
+nli ↑m
+∞
+(cid:12) (cid:12)E (X,Y)∼Dn[g(X,Y)]−E (X,Y)∼D[g(X,Y)](cid:12) (cid:12)=0. (15)
+Sinceλ (ϑ)islocally-Lipschitzforeachϑ∈co(∆θ)and[0,1]d+D iscompactthen(x,y)(cid:55)→λ (ϑ)isbounded(andof
+x,y x,y
+coursecontinuous). Thus,wepaypickgin(15)tobe(x,y)(cid:55)→λ (ϑ);whence,
+x,y
+nli ↑m
+∞
+(cid:12) (cid:12)E (X,Y)∼Dn[λ X,Y(ϑ)]−E (X,Y)∼D[λ X,Y(ϑ)](cid:12) (cid:12)=0. (16)
+Thus,Liscontinuousinitsfirstargumentaswell. Therefore,Liscontinuous,whichimpliesthatitisCarathéodory. This
+completestheverificationofalltheconditionsoftheMeasurableMaximumTheorem,againsee(AliprantisandBorder,
+2006,Theorem18.19(2)),havebeenverified. Whence: 1)foreachD ∈Dtheargminset
+(cid:110) (cid:104) (cid:105) (cid:111)
+M(D)=def. ϑ∈co(∆θ): E
+(X,Y)∼D
+ℓ(f θ+∆θ(X),Y) =ℓ⋆(D)
+isnon-empty;wherethecorrespondingoraclelossisgivenby
+(cid:104) (cid:105)
+ℓ⋆(D)=def. inf E
+(X,Y)∼D
+ℓ(f θ+∆θ(X),Y) .
+∆θ∈co(∆θ)
+ThisestablishesProposition2. Moreover,(AliprantisandBorder,2006,Theorem18.19(1)and(3))furtherimplythatthere
+existsameasurableselectorS :D →co(∆θ);i.e.S isBorelmeasurableforeachD ∈Dthefollowingoptimalselection
+propertyholds:
+S(D)∈M(D). (17)
+11
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+Step2-ChangeofDomain
+Next,wecreatea“copy”ofS in“distancedomain”[0,∞)K. Bythewell-posednessassumptionmadeinAssumption1,
+themapalign:D →[0,∞)K isinjective. Thus,alignisbijectiveontoitsimage. Sinceeachcomponentofalignisgiven
+bythe1-Lipchitz,andthereforecontinuous,functionD :D (cid:55)→ρ(D,D )∈[0,∞);then(Munkres,2000,Theorem19.6)
+k
+impliesthataligniscontinuous. Consequentially,alignisameasurablebijectionontoitsimagealign(D). Thus,(Kechris,
+1995,corollary15.2)impliesthatalignhasameasurableinverseψ :align(D)→Donitsimagealign(D);i.e.
+align◦ψ =1 andψ◦align=1 . (18)
+align(D) D
+DefinethemapS′ :align(D)→co(∆θ)bycompositionwithψvia
+S′=def.S◦ψ.
+LetS˜beanymeasurableextensionofS′toallofRK;e.g.
+S˜ =def.S′I x∈align(D)+∆θ 1I x̸∈align(D).
+Byconstruction: foreachD ∈D
+S˜◦align(D)=S(D). (19)
+Step3-High-ProbabilityofContinuity
+Consider the pushforward (probability) measure Q =def. align P on [0,∞)K, supported on align(D). Now, by Lusin’s
+♯
+Theorem, as formulated in (Klenke, 2020, Exercise 13.1.3), for every ε ∈ (0,1] there exists a compact subset K ⊂
+ε
+supp(Q)⊆align(D)suchthat
+Q(K )≥1−εandS˜| ∈C(K ,co(∆θ)) (20)
+ε Kε ε
+whereC(K ,co(∆θ))denotesthesetofcontinuousfunctionsfromK toco(∆θ).
+ε ε
+SinceS˜| iscontinuousanditsimageliesinaclosedconvexsetthentheDugundji-Tietzetheorem,see(Dugundji,1951,
+Kε
+Theorem4.1),impliesthatthereexistsacontinuousextensionS :RK →co(∆θ);i.e.
+ε
+S (x)=S˜(x) (21)
+ε
+forallx∈K .
+ε
+Step4-ApproximationbyModelsoftheform(5)
+LetW :RK−1 →RK betheaffinemapof(KratsiosandPapon,2022,Example13). Then,bynearlyidenticalcomputation
+to(KratsiosandPapon,2022,Example13),wefindthatthemap
+RK →co(∆θ)
+(22)
+w (cid:55)→softmax(W(w))⊤(L ,...,L )
+1 K
+alsosatisfies(KratsiosandPapon,2022,Assumption8). Sincesoftmin=softmax(−·);setW˜ =def. −W,andnotethat,the
+resultof(22)canbere-expressedas
+RK →co(∆θ)
+(23)
+w (cid:55)→softmin(W˜(w))⊤(L ,...,L )
+1 K
+Since S˜ is continuous, K ⊂ RK is a non-empty compact set, and ς is a continuous activation function satisfying the
+ε
+Kidger-Lyonscondition,of(KidgerandLyons,2020);namelyitdifferentiablewithnon-zeroderivativeatatleastonepoint
+inR,then(aninconsequentialmildvariant)of(KratsiosandPapon,2022,Theorem37(ii))impliesthat: foreveryδ >0(to
+befixedretroactively)thereexistsanMLPfˆ:RK →RK withactivationfunctionς suchthatthemap
+fˆ =def.[softmin◦C(·)]⊤(L 1,...,L K):RK →co(∆θ)
+12
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+satisfiestheuniformapproximationguarantee
+(cid:13) (cid:13)
+max(cid:13)F δ(x)−S ε(x)(cid:13)<δ. (24)
+x∈Kε
+Now,by(19),thecontinuousextensionpropertyin(21),andtheapproximationguaranteein(24)wefindthat
+max (cid:13) (cid:13)fˆ◦align(D)−S(D)(cid:13) (cid:13)= max(cid:13) (cid:13)fˆ−S ε(x)(cid:13) (cid:13)<δ. (25)
+D∈ψ(Kε) x∈Kε
+ThecontinuityofL,definedin(14),impliesthatδ >0maybetakentobesmallenoughsothat: foreachD ∈ψ(K )
+ε
+(cid:12) (cid:12)
+(cid:12)L(D,θ+C δ)−L(D,θ+S(D))(cid:12)<ε. (26)
+Step5-ϵ-Optimalitywithhighprobability
+Combiningtheε-uniformapproximationguaranteein(26)forC ◦alignwiththeoptimalityguaranteeforS in(17)implies
+δ
+that: foreachD ∈ψ(K )
+ε
+L(D,θ+C )−ε≤L(D,θ+S(D))=ℓ⋆(D). (27)
+δ
+Snow,sinceD (cid:55)→ L(D,θ+C )isthecompositionofcontinuousfunctions,itiscontinuousandthereforemeasurable;
+δ
+whencetheset
+M
+ε⋆=def.(cid:8)
+L(D,θ+C
+δ)−ε≤ℓ⋆(D)(cid:9)
+isBorelmeasurableandcontainsψ(K ). Inparticular,P(M⋆)iswell-defined. Finally,thelower-boundin(20)yields
+ε ε
+P(M⋆)≥P(ψ(K )≥Q(K )≥1−ε
+ε ε ε
+whichconcludesourproof.
+C.ImplementationDetails
+Inourimplementation,weusedtheLots-of-LoRAsHuggingFacerepository(Gabrielsson,2025),whichcontains502dataset-
+adapterpairsforMistral-7B-Instruct-v0.2. Fromthese502Englishdatasets,10aremanuallyselectedtoensurediversityof
+tasksspanningclassification,commonsensereasoning,andquestiongenerationdomainsforevaluation. Additionally,492
+datasetsarerandomlyselectedfromthe1616diversenaturallanguageprocessing(NLP)tasksprovidedby(Wangetal.,
+2022). Eachadaptercomprisesp=9,437,184parameters,storedas32-bitfloating-pointnumbers(approximately36MB).
+Tofurtherreducethecomputationalloadofourtrainingprocedure,weimplementedseveralcriticaloptimizationsinStep2:
+1. Symmetryexploitation: Forsymmetricdifferencemetrics(WD,JS,andMMD),wecalculateonlyhalfofthepossible
+N ×N distances,reusingvaluesobtainedfromcalculationsdoneforpair(i,j),wherei<j,asthe(j,i)pairaswell.
+2. Pre-computationofprobabilitydistributions: Formetricsrequiringprobabilitydensityfunctions(KLandJS),we
+pre-calculateandcachethesedistributionsforalldatasetstoavoidrepeatingthesecostlycomputations.
+3. Parallelization: Wealsoutilizemulti-threadingcapabilitiesbyassigningeachdistancecalculationtoaseparateCPU
+thread,allowingtheseindependentcomputationstobeprocessedconcurrently.
+Table2reportsthetimeelapsedateachstageofourLoRAgenerationpipeline,measuredonaDellXPS15(Inteli7-13700H,
+14cores,64GBRAM).Allsteps,exceptforthefinalinferenceandadapterloading,wereexecutedusingtheCPUonly
+across502datasets. Importantly,weranthisbenchmarkbypredictingtheadapterforeachofthe502datasets,assumingthe
+remaining501weregiven,toevaluatetheoverallperformanceofourpipeline.
+ExcludingGPUinferenceandadapterloading,generatingpredictedadaptersfor502datasetsacross12methodstookroughly
+9hours. Intypicaluse—predictingoneadapterusingasinglevariateofourLoRAgenerationpipelineandmetric—runtime
+ismuchlower: generatingoneadapterfrom100referencepairstakes10–20minutes,dependingoncompute,memory,
+network,anddatasetsize. Runtimescalesroughlylinearlywiththenumberandsizeofreferencedatasets,asmoststepsrun
+independentlyperdataset. However,fullexperimentalrunsinvolvingpairwisecomparisons(e.g.,distancecomputations)
+scalequadraticallywiththenumberofdatasets.
+13
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+Table2. Timeelapsedforeachstepofthepipelineforall502datasetsatonce(CPUonly).
+PipelineStep Time
+1.Dataset-Adapterpairsgathering:
+Downloadingrawdata 15min
+2.DatasetsPre-processing:
+Tokenization 10min
+3.Distributionsimilaritycalculations:
+Wasserstein(WD) 3hours
+Kullback–Leibler(KL) 5min
+Jensen–Shannon(JS) 5min
+MaximumMeanDiscrepancy(MMD) 1.5hours
+4.DistancesProcessing(Coefficients):
+Baseattentional 3min
+Normalized 3min
+MLP-based 45min
+5.Adapterprediction:
+Calculatingadaptersandsaving 5min
+C.1.PipelineSteps
+WeevaluatethreepipelinesforpredictingLoRAadapterparameters. TheAttentionalmethodislightweight,usingonly
+matrix multiplications with no learned components. The Normalized method standardizes distance values to a normal
+distributiontostabilizetheSoftMinstage. TheNeuralmethodtrainsasmallCPU-basedMLPtominimizeMSEbetween
+predictedandactualadapterweightsandbiases.
+C.1.1.DATASET-ADAPTERPAIRSGATHERING
+Ourapproachreliesonpre-existingfine-tunedadaptersandtheircorrespondingdatasets. Webeginbygatheringasetof
+N datasets,denotedas{D }N ,whereforeachdataset,wealsohavetheoptimaladapters,{θ }N . Theseadaptersare
+i i=1 n n=1
+generatedbyfine-tuningthesamebasemodel,usingthesameadapterstructure,ontheirrespectivedatasets.
+C.1.2.DATASETSPRE-PROCESSING
+Next, wetokenizeeachdatasetusingthebasemodel’stokenizer, convertinginputsandoutputsintointegersequences.
+Formally, we apply a tokenizer T : S → Zl×V (where l being the length of the tokenized sequence and V being the
+tokenizer’svocabularysize)tomapeachstringtoitssequenceoftokenIDs. Theresultingsequencesdenoted{T(D )}N ,
+i i=1
+contain all the tokenized inputs followed by the outputs for each dataset. This preprocessing step is computationally
+efficientandhighlyparallelizable. WealsoextracttheLoRAadapterparameters(weightsandbiases)fromeachfine-tuned
+model, reshapethemintoone-dimensionalvectors, andstackthemintoamatrixθ ∈ RN×p (N beingthenumberof
+all
+dataset-adapterpairs,andpthenumberofparametersperadapter). Thus,eachrowrepresentstheparametersofasingle
+adapter.
+C.1.3.DISTRIBUTIONDISTANCECOMPUTATION
+A key step in our pipeline is computing the dissimilarity between datasets, which are treated as probability distribu-
+tionsovertokenizedsequences. Giventokenizeddatasets{T(D )}N ,wecomputepairwisedistancesusingfourestab-
+i i=1
+lished measures: the Wasserstein distance, Kullback–Leibler divergence, Jensen–Shannon divergence, and Maximum
+Mean Discrepancy, as defined in Appendix A.3. For each tokenized dataset T(D ), we calculate a distance vector
+i
+δ =[ρ(T(D ),T(D )),ρ(T(D ),T(D )),...,ρ(T(D ),T(D ))],whereρisthechosendivergencemetric. Inpractice,
+i i 1 i 2 i N
+wemasktheself-distanceρ(T(D ),T(D ))byassigningitalargevaluepriortonormalization. Notethathereweare
+i i
+emphasizingthetokenizationstepusingtheT(D )notation,whereasinthemaintextweoftenomitthis.
+i
+14
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+C.1.4.DISTANCESPROCESSING(WITHDIFFERENTMETHODOLOGIES)
+Thegoalhereistofindhowcloseeachdatasetistothecurrentdatasetandtoassigncoefficientstotheminsuchawaythat
+thesecoefficientsincreaseasthesimilarityincreases.
+AttentionalApproach Inthisbaselineapproach,wedirectlyapplythesoftminfunctiontothedistancevectors,after
+maskingtheself-correspondingentry. ForeachdatasetD ,wecalculate:
+i
+w (j)=softmin(δ (j)|j ∈1,2,...,N,j ̸=i) (28)
+i i
+whereδ (j)=ρ(T(D ),T(D ))representsthedistancebetweenthetokenizeddatasets.
+i i j
+Attentional Approach - With Normalization In this variant, we normalize each distance vector to have zero mean
+(µ=0)andunitvariance(σ =1),effectivelyapplyingz-scorestandardization.Thistransformationisequivalenttoapplying
+asoftminwithanadaptivetemperatureτ = σ (itsownstandarddeviation). Whenσ issmall,thetemperatureislow,
+i i i
+leadingtosharper,morepeaked(i.e.,sparse)coefficientdistributions. Conversely,largerσ resultsinflatterdistributions.
+i
+Empirically,weobservethatmostσ valuesaresmallaftermaskingtheself-distance,whichleadstosparserweights—and,
+i
+interestingly,improvedperformance.
+NeuralApproach Thethirdpipeline,justifiedbyTheorem1,usesasmallMLPtomapdistancevaluestoadapterweights.
+ItminimizestheMSEbetweenpredictedandactualadapterparameters(weightsandbiases). TheMLPusedherehasthree
+fullyconnectedlayers,withthefirsttwofollowedbylayernormalizationandReLUactivations.
+h=ReLU(LayerNormalization(W x+b )), h∈R4000 (29)
+1 1
+hˆ =ReLU(LayerNormalization(W h+b )), hˆ ∈R4000 (30)
+2 2
+yˆ=W hˆ+b , yˆ∈R1 (31)
+3 3
+wherex∈Risasingledistancevalue(scalar),W ∈R4000×1,W ∈R4000×4000,andW ∈R1×4000areweightmatrices,
+1 2 3
+andb ∈R4000,b ∈R4000,andb ∈R1arebiasterms. WeapplytheMLPtotransformalldistancevalues:
+1 2 3
+w (j)=softmin(MLP(δ (j))|j ∈1,2,...,N,j ̸=i) (32)
+i i
+C.1.5.ADAPTERPREDICTION
+Wemakeourpredictionwithastraightforwardlinearcombinationofexistingadapters,weightedbytheprocesseddistances:
+N
+θˆ = (cid:88) w (j)θ . (33)
+i i j
+j=1,j̸=i
+Thisformulationeffectivelyanswersthekeyquestion: “Basedonthedistancesbetweenanewdatasetandeachofthe
+datasetswithknownadapters,whatproportionofinformationshouldthenewadaptersinheritfromeachofthefine-tuned
+(reference)adapters?” Theprocesseddistancesserveascoefficientsdeterminingtheknowledgetransferfromeachsource
+adapter.
+Inourstudy,tomakethepredictionsforalldatasetsmoreefficient,weconstructaweight(coefficient)matrixW ∈RN×N
+where row i contains the processed distances w , allowing us to compute all predictions simultaneously by leveraging
+i
+hardwareaccelerationandvectorization.
+DeploymentandInference Predictedadaptersmatchthesizeofflattenedfine-tunedadaptersandcanbereshapedtotheir
+originalstructure,ensuringfullcompatibilitywithexistingLoRAinferencepipelines. Oncegenerated,theycanbedirectly
+loadedfordownstreamuse.
+D.FurtherExperimentalEvaluation
+Thisappendixpresentsadetailedaccountofourexperimentalobservations.
+15
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+D.1.ExactMatchEvaluation
+InadditiontoRouge-L,weevaluateourLoRAgenerationpipelinesusingtheExactMatch(EM)metric,whichmeasuresthe
+fractionoftestsamplesforwhichthemodel’soutputexactlymatchestheexpectedstring. Thisisaparticularlymeaningful
+complementforclassification-styletaskscommoninourdatasetcorpus,whereoutputsareshort,well-defined,andoften
+categorical. Withoutanyfine-tuning,theMistralmodelachievedascoreof0.016±0.069. Ideally,iftheuserhadaccessto
+GPUs,theGPUfine-tunedmodelswouldachieveanaverageexactmatchscoreof0.654±0.351). AsshowninTable3,
+eachofourpipelinesperformssubstantiallybetterthanthebasefoundationmodel,butasexpected,itdoesnotachievethe
+samepredictivepowerasLLMswithfine-tunedLoRAs. Additionally,notethatweobserveastrongcorrelationbetween
+Rouge-LandEMscoresacrossallmethodsanddistancemetrics. BothevaluationscoresconsistentlyranktheNormalized
+approachwithJSasthetop-performingconfiguration. WhileRouge-Lcapturespartialoverlapbetweengeneratedand
+referencesequences,EMprovidesastricterbinarysignalofcorrectness. Despitethisdifferenceingranularity,therelative
+performanceoftheAttentional,Normalized,andNeuralapproachesremainsconsistentsuggestingthatimprovementsin
+softsequencesimilarityareaccompaniedbygainsinexactpredictionaccuracy.
+Table3. ExactmatchperformanceofourlightweightLoRApredictionpipelines.
+Approach WD KL JS MMD
+Attentional 0.288±0.297 0.344±0.302 0.328±0.296 0.327±0.295
+Normalized 0.338±0.296 0.330±0.297 0.373±0.314 0.340±0.298
+Neural 0.338±0.294 0.323±0.295 0.325±0.296 0.337±0.298
+D.2.CoefficientDistributionAnalysis
+Figures1a,1b,and1cbelowshowtheLoRAmatricesproducedbyeachapproachacrosseachofourdatasets. Ineach
+visualization,boththehorizontalandverticalaxeslistthedataset,andeachofthe(i,j)th pixeldarknessindicatorshow
+much of the pre-trained LoRA from dataset i is used to predict the LoRA for dataset j. Darker pixels indicate lower
+coefficients,whilebrighteronesindicatehigherweightsassignedtoasourceadapterforeachtargetdataset. Bothaxes
+correspondtodatasetindices. Interestingly,theNormalizedapproachexhibitsextremesparsity: mostweightsarenearzero,
+andeachpredictionisdominatedbyoneortworeferenceadapters,asevidencedbythepresenceofisolatedbrightpixelsin
+alargelydarkmatrix. Incontrast,theNeural(MLP)andAttentionalmethodsdisplaygreaterdispersioninthecoefficients,
+withmanyrowsexhibitingmoderateweightsacrossabroaderrangeofsourceadapters. Thisreflectsamoredistributedand
+nuancedreuseofprioradapters. GiventhattheNormalizedapproachexhibitsslightlybetterperformanceinpractice,this
+visualizationmaysuggestthatsparsityisimportant,butfurtherinvestigationinfollow-upworkisencouraged.
+(a)Attentional (b)Normalized (c)Neural(MLP)
+Figure1.Coefficientdistributionsforeachapproach.Eachimage:TopLeft=WD,TopRight=KL,BottomLeft=JS,BottomRight=
+MMD.
+16
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+D.3.SampleOutputsGeneratedbyPredictedModels
+Below,wehaveincludedfourrandomlyselectedinputs,expectedoutputs,andthegeneratedtextsbyamodelwithpredicted
+adaptersusingourbestconfigurations: theJS-divergence-basedNormalizedapproach.
+InputPrompt[TaskID671]:
+"Definition:Inthistask,you’regivenanambiguousquestion(whichcanbeansweredinmorethanoneway).Yourtaskistoprovide
+onequestionwhichclarifiestheinputquestionandithasoneuniqueanswer,andalsoprovideananswertothegeneratedquestion.
+Generatedquestionandanswershouldbeseparatedwithanewline.
+PositiveExample1-
+Input:Luciferhowmanyepisodesareinseason3?
+Output:Howmanyepisodesofseason3ofLuciferwerethere,includingbonusepisodes?
+26
+PositiveExample2-
+Input:Whatisthetallestrideatsixflagsovertexas?
+Output:Whatisthetallestrollercoasteratsixflagsovertexas2001?
+TheTitan
+NegativeExample1-
+Input:Luciferhowmanyepisodesareinseason3?
+Output:Howmanyepisodesofseason3ofLuciferwerethere,includingbonusepisodes?26
+NegativeExample2-
+Input:Whatisthetallestrideatsixflagsovertexas?
+Output:WhatisthetallestrollercoasteratsixflagsoverTexas2001?
+Nowcompletethefollowingexample-
+Input:Whenwasseason7ofgameofthronesreleased?
+Output:
+"
+ExpectedAnswer:
+"Whenwasseason7,episode1ofgameofthronesreleasedthroughsimulcast?
+July16,2017"
+ModelOutput:
+"Whenwasseason7ofgameofthronesreleasedintheUS?
+July16,2017
+InputPrompt[TaskID431]:
+"Definition:Inthistaskyouaregivenasentence.Youmustjudgewhethertheobjectofthemainclauseissingular(like:apple)or
+plural(like:apartments).Labeltheinstancesas"Singular"or"Plural"basedonyourjudgment.
+PositiveExample1-
+Input:Theybothletoutrelievedbreathsatthedoctors´words.
+Output:Plural
+PositiveExample2-
+Input:Hesignaledthebartenderandorderedonemoredrink.
+Output:Singular
+NegativeExample1-
+Input:Icollectmypaintingsupplies.
+Output:Singular
+NegativeExample2-
+Input:Isawtherampleadingbacktowardthesurface.
+Output:Plural
+17
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+Nowcompletethefollowingexample-
+Input:Forsomeunknownreason,thatsecondkisswreakedmoreemotionalhavocthanthefirsthad.
+Output:
+"
+ExpectedAnswer:
+"Singular"
+ModelOutput:
+"Singular"
+InputPrompt[TaskID322]:
+"Definition: Inthistask,youaregivenapubliccommentfromonlineplatforms. Youareexpectedtoclassifythecommentinto
+twoclasses:threatandnon-threat. Threatisastatementthatsomeonewillbehurtorharmed,especiallyifthepersondoesnotdo
+somethinginparticular.
+PositiveExample1-
+Input:Comment:Enoughalready.Cuttheheadoffthissnake.
+Output:Threat
+PositiveExample2-
+Input:Comment:Disgustingcomment,Ipityanyonewhohastolivewithyou.
+Output:Non-threat
+NegativeExample1-
+Input:Comment:Bravo!Bravo!
+Encore!!Encore!!Encore!!
+Output:Threat
+NegativeExample2-
+Input:Comment:...aftershootingherwithherowngun.
+Output:Non-threat
+Nowcompletethefollowingexample-
+Input:Comment:It’sagoodthingthatrightwingilliteratesinfarmsdon’treadthenewspaper.
+Output:
+"
+ExpectedAnswer:
+"Non-threat"
+ModelOutput:
+"Non-threat"
+InputPrompt[TaskID1398]:
+"Definition:Givenafact,createaquestionthatcanbeansweredusingthefact.Constructthequestionsuchthatitisunambiguous,has
+auniqueanswerandtheanswercanbegivenusingthefact.
+PositiveExample1-
+Input:Fact:deepseaanimalslivedeepintheocean
+Output:Frilledsharksandanglerfishlivefarbeneaththesurfaceoftheocean,whichiswhytheyareknownas?
+PositiveExample2-
+Input:Fact:asanobjectmoves,thekineticenergyofthatobjectwillincrease
+Output:Anexampleoflotsofkineticenergywouldbe?
+18
+
+LoRAFine-TuningWithoutGPUs:ACPU-EfficientMeta-GenerationFrameworkforLLMs
+NegativeExample1-
+Input:Fact:waterisoftenbrackishinanestuary
+Output:Whatisthesunmadeof?
+NegativeExample2-
+Input:Fact:ifaliquiddisappearsthenthatliquidprobablyevaporated
+Output:Whathappensiswaterismoppedup?
+Nowcompletethefollowingexample-
+Input:Fact:astheuseofacropincreases,theamountofcropsplantedwillincrease
+Output:
+"
+ExpectedAnswer:
+"Whenthedemandforcornrises?"
+ModelOutput:
+"Whichcropismostlikelytobeplantedinlargequantitiesduetoitshighdemand?"
+19

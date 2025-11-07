@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/sample-paper.schema.json",
+  "title": "Sample Paper Metadata Schema",
+  "description": "Schema for test fixture metadata defining sample academic papers with ground truth annotations",
+  "type": "object",
+  "required": ["version", "last_updated", "papers"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Metadata schema version (semantic versioning)",
+      "example": "1.0.0"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of last metadata update (YYYY-MM-DD)",
+      "example": "2025-11-03"
+    },
+    "papers": {
+      "type": "array",
+      "description": "Collection of sample paper fixtures",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/definitions/SamplePaper"
+      }
+    }
+  },
+  "definitions": {
+    "SamplePaper": {
+      "type": "object",
+      "required": [
+        "paper_id",
+        "file_path",
+        "title",
+        "source_type",
+        "character_count",
+        "contains_latex",
+        "expected_techniques"
+      ],
+      "properties": {
+        "paper_id": {
+          "type": "string",
+          "pattern": "^paper_\\d{3}$",
+          "description": "Unique paper identifier",
+          "example": "paper_001"
+        },
+        "file_path": {
+          "type": "string",
+          "pattern": "^tests/fixtures/papers/paper_\\d{3}_[a-z_]+\\.txt$",
+          "description": "Relative path to paper text file",
+          "example": "tests/fixtures/papers/paper_001_rag.txt"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 200,
+          "description": "Academic paper title",
+          "example": "Retrieval-Augmented Generation for Knowledge-Intensive NLP"
+        },
+        "source_type": {
+          "type": "string",
+          "enum": ["academic", "blog", "press_release", "podcast", "social"],
+          "description": "Content source category",
+          "example": "academic"
+        },
+        "character_count": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 100000,
+          "description": "Total characters in paper text",
+          "example": 28450
+        },
+        "contains_latex": {
+          "type": "boolean",
+          "description": "Whether paper includes LaTeX formatting",
+          "example": true
+        },
+        "expected_techniques": {
+          "type": "array",
+          "description": "Ground truth technique annotations",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/ExpectedTechnique"
+          }
+        }
+      }
+    },
+    "ExpectedTechnique": {
+      "type": "object",
+      "required": [
+        "full_name",
+        "min_confidence",
+        "max_confidence",
+        "expected_context_type",
+        "mention_count"
+      ],
+      "properties": {
+        "full_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Canonical technique name from taxonomy",
+          "example": "Retrieval-Augmented Generation"
+        },
+        "min_confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Minimum acceptable confidence score",
+          "example": 0.90
+        },
+        "max_confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Maximum expected confidence score",
+          "example": 1.00
+        },
+        "expected_context_type": {
+          "type": "string",
+          "enum": ["production", "research", "tutorial", "criticism", "general"],
+          "description": "Expected context classification",
+          "example": "research"
+        },
+        "mention_count": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of times technique mentioned in paper",
+          "example": 12
+        }
+      }
+    }
+  }
+}
+

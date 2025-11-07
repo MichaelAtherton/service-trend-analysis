@@ -1,0 +1,489 @@
+{
+  "$schema": "../../specs/002-mvp-testing/contracts/sample-paper-schema.json",
+  "version": "1.0.0",
+  "created": "2025-11-04",
+  "description": "Ground truth annotations for 10 sample academic papers used in MVP testing",
+  "papers": [
+    {
+      "paper_id": "paper_001",
+      "file_path": "papers/rlhf.txt",
+      "title": "Reinforcement Learning from Human Feedback: A Short Introduction",
+      "source_type": "academic",
+      "character_count": 332503,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Reinforcement Learning from Human Feedback",
+          "min_confidence": 0.95,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 200
+        },
+        {
+          "full_name": "Reward Modeling",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 100
+        },
+        {
+          "full_name": "Instruction Tuning",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 80
+        },
+        {
+          "full_name": "Proximal Policy Optimization",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "tutorial",
+          "mention_count": 60
+        },
+        {
+          "full_name": "Direct Preference Optimization",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "tutorial",
+          "mention_count": 50
+        },
+        {
+          "full_name": "Rejection Sampling",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "tutorial",
+          "mention_count": 40
+        },
+        {
+          "full_name": "Policy Gradient",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "tutorial",
+          "mention_count": 45
+        },
+        {
+          "full_name": "Constitutional AI",
+          "min_confidence": 0.75,
+          "max_confidence": 0.85,
+          "expected_context_type": "tutorial",
+          "mention_count": 15
+        },
+        {
+          "full_name": "Fine-Tuning",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "tutorial",
+          "mention_count": 70
+        }
+      ],
+      "notes": "Comprehensive tutorial/book on RLHF covering reward models, PPO, DPO, instruction tuning, rejection sampling, and reasoning. By Nathan Lambert."
+    },
+    {
+      "paper_id": "paper_002",
+      "file_path": "papers/diffusion models.txt",
+      "title": "Diffusion Models: A Comprehensive Survey of Methods and Applications",
+      "source_type": "academic",
+      "character_count": 204714,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Diffusion Models",
+          "min_confidence": 0.95,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 150
+        },
+        {
+          "full_name": "Denoising",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 80
+        },
+        {
+          "full_name": "Generative Adversarial Network",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "research",
+          "mention_count": 25
+        },
+        {
+          "full_name": "Variational Autoencoder",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "research",
+          "mention_count": 20
+        },
+        {
+          "full_name": "Transformer",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "research",
+          "mention_count": 15
+        },
+        {
+          "full_name": "Attention Mechanism",
+          "min_confidence": 0.75,
+          "max_confidence": 0.85,
+          "expected_context_type": "research",
+          "mention_count": 10
+        },
+        {
+          "full_name": "Reinforcement Learning from Human Feedback",
+          "min_confidence": 0.70,
+          "max_confidence": 0.85,
+          "expected_context_type": "research",
+          "mention_count": 3
+        }
+      ],
+      "notes": "Comprehensive survey paper - primary focus on diffusion models with comparisons to GANs, VAEs, and other generative models. RLHF mentioned in section 7.1.2."
+    },
+    {
+      "paper_id": "paper_003",
+      "file_path": "papers/LoRA:fine-tuning.txt",
+      "title": "LoRA Fine-Tuning Without GPUs: A CPU-Efficient Meta-Generation Framework for LLMs",
+      "source_type": "academic",
+      "character_count": 61917,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Low-Rank Adaptation",
+          "min_confidence": 0.95,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 120
+        },
+        {
+          "full_name": "Fine-Tuning",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 80
+        },
+        {
+          "full_name": "Transformer",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "research",
+          "mention_count": 20
+        },
+        {
+          "full_name": "Attention Mechanism",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "research",
+          "mention_count": 15
+        },
+        {
+          "full_name": "Multi-Layer Perceptron",
+          "min_confidence": 0.75,
+          "max_confidence": 0.85,
+          "expected_context_type": "research",
+          "mention_count": 25
+        },
+        {
+          "full_name": "Vision Transformer",
+          "min_confidence": 0.70,
+          "max_confidence": 0.80,
+          "expected_context_type": "research",
+          "mention_count": 2
+        },
+        {
+          "full_name": "Graph Neural Network",
+          "min_confidence": 0.70,
+          "max_confidence": 0.80,
+          "expected_context_type": "research",
+          "mention_count": 2
+        }
+      ],
+      "notes": "Paper focuses on CPU-efficient LoRA generation for LLM fine-tuning using meta-learning. Tests on Mistral-7B-Instruct-v0.2 with 502 datasets."
+    },
+    {
+      "paper_id": "paper_004",
+      "file_path": "papers/transformer architecture.txt",
+      "title": "An Introduction to Transformers",
+      "source_type": "academic",
+      "character_count": 32618,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Transformer",
+          "min_confidence": 0.95,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 180
+        },
+        {
+          "full_name": "Self-Attention",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 60
+        },
+        {
+          "full_name": "Multi-Head Attention",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 40
+        },
+        {
+          "full_name": "Multi-Layer Perceptron",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "tutorial",
+          "mention_count": 30
+        },
+        {
+          "full_name": "Layer Normalization",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "tutorial",
+          "mention_count": 25
+        },
+        {
+          "full_name": "Residual Connection",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "tutorial",
+          "mention_count": 20
+        },
+        {
+          "full_name": "Vision Transformer",
+          "min_confidence": 0.75,
+          "max_confidence": 0.85,
+          "expected_context_type": "tutorial",
+          "mention_count": 10
+        },
+        {
+          "full_name": "Convolutional Neural Network",
+          "min_confidence": 0.70,
+          "max_confidence": 0.80,
+          "expected_context_type": "general",
+          "mention_count": 12
+        },
+        {
+          "full_name": "Recurrent Neural Network",
+          "min_confidence": 0.70,
+          "max_confidence": 0.80,
+          "expected_context_type": "general",
+          "mention_count": 8
+        },
+        {
+          "full_name": "Graph Neural Network",
+          "min_confidence": 0.70,
+          "max_confidence": 0.80,
+          "expected_context_type": "general",
+          "mention_count": 5
+        }
+      ],
+      "notes": "Educational tutorial paper explaining transformer architecture mathematically - covers MHSA, MLPs, residual connections, and layer normalization."
+    },
+    {
+      "paper_id": "paper_005",
+      "file_path": "papers/model compression.txt",
+      "title": "Model Compression and Efficient Inference for Large Language Models: A Survey",
+      "source_type": "academic",
+      "character_count": 293338,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Quantization",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 150
+        },
+        {
+          "full_name": "Pruning",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 120
+        },
+        {
+          "full_name": "Knowledge Distillation",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 100
+        },
+        {
+          "full_name": "Model Compression",
+          "min_confidence": 0.95,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 180
+        },
+        {
+          "full_name": "Transformer",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "research",
+          "mention_count": 80
+        },
+        {
+          "full_name": "Multi-Head Attention",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "research",
+          "mention_count": 40
+        },
+        {
+          "full_name": "Mixture of Experts",
+          "min_confidence": 0.75,
+          "max_confidence": 0.85,
+          "expected_context_type": "research",
+          "mention_count": 30
+        }
+      ],
+      "notes": "Comprehensive survey on LLM compression methods including quantization, pruning, distillation, compact architecture design, and dynamic networks."
+    },
+    {
+      "paper_id": "paper_006",
+      "file_path": "papers/multi-modal AI.txt",
+      "title": "Multi-modal Generative AI: Multi-modal LLMs, Diffusions and the Unification",
+      "source_type": "academic",
+      "character_count": 125075,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Multi-modal Learning",
+          "min_confidence": 0.95,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 200
+        },
+        {
+          "full_name": "Large Language Model",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 150
+        },
+        {
+          "full_name": "Diffusion Models",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 120
+        },
+        {
+          "full_name": "Mixture of Experts",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "research",
+          "mention_count": 40
+        },
+        {
+          "full_name": "Autoregressive Model",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "research",
+          "mention_count": 50
+        },
+        {
+          "full_name": "Vision Transformer",
+          "min_confidence": 0.75,
+          "max_confidence": 0.85,
+          "expected_context_type": "research",
+          "mention_count": 30
+        },
+        {
+          "full_name": "Text-to-Image Generation",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "research",
+          "mention_count": 60
+        }
+      ],
+      "notes": "Survey on multi-modal generative AI covering LLMs (GPT-4V), diffusion models (Sora), and unified models for understanding and generation."
+    },
+    {
+      "paper_id": "paper_007",
+      "file_path": "papers/evaluation metrics.txt",
+      "title": "Unveiling LLM Evaluation Focused on Metrics: Challenges and Solutions",
+      "source_type": "academic",
+      "character_count": 72159,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Model Evaluation",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 80
+        },
+        {
+          "full_name": "Natural Language Processing",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "research",
+          "mention_count": 40
+        },
+        {
+          "full_name": "Large Language Model",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "research",
+          "mention_count": 100
+        }
+      ],
+      "notes": "Survey on evaluation metrics for LLMs with mathematical formulations and statistical interpretations. Focus on metrics like BLEU, ROUGE, perplexity for biomedical LLMs."
+    },
+    {
+      "paper_id": "paper_008",
+      "file_path": "papers/tutorial on prompting.txt",
+      "title": "The Prompt Engineering Report Distilled: Quick Start Guide for Life Sciences",
+      "source_type": "academic",
+      "character_count": 87929,
+      "contains_latex": false,
+      "expected_techniques": [
+        {
+          "full_name": "Prompt Engineering",
+          "min_confidence": 0.95,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 150
+        },
+        {
+          "full_name": "Large Language Model",
+          "min_confidence": 0.90,
+          "max_confidence": 1.00,
+          "expected_context_type": "tutorial",
+          "mention_count": 120
+        },
+        {
+          "full_name": "Zero-shot Learning",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "tutorial",
+          "mention_count": 40
+        },
+        {
+          "full_name": "Few-shot Learning",
+          "min_confidence": 0.85,
+          "max_confidence": 0.95,
+          "expected_context_type": "tutorial",
+          "mention_count": 40
+        },
+        {
+          "full_name": "Chain-of-Thought Prompting",
+          "min_confidence": 0.80,
+          "max_confidence": 0.90,
+          "expected_context_type": "tutorial",
+          "mention_count": 25
+        },
+        {
+          "full_name": "Natural Language Processing",
+          "min_confidence": 0.75,
+          "max_confidence": 0.85,
+          "expected_context_type": "tutorial",
+          "mention_count": 15
+        }
+      ],
+      "notes": "Practical tutorial on prompt engineering for life sciences covering zero-shot, few-shot, thought generation, ensembling, self-criticism, and decomposition techniques."
+    }
+  ]
+}
+
